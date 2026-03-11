@@ -222,7 +222,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
       <div class="char-sel-btn" onclick="selectChar('rb')">
         <span class="char-sel-emoji">🐰</span>
         <div class="char-sel-name">루나</div>
-        <div class="char-sel-desc">밝고 귀여운 타로 조수</div>
+        <div class="char-sel-desc">따뜻하고 직관적인 별빛의 안내자</div>
       </div>
     </div>
   </div>
@@ -395,6 +395,22 @@ var CARD_SYMBOLS = [
 var cardData = [];
 var selectedTopic = '', selectedSpread = 1;
 var drawnCards = [], flippedCount = 0;
+var storedReadings = null;
+
+/* ═══════ KOREAN PARTICLE HELPER ═══════ */
+function j(word, pair) {
+  var c = (word || '').slice(-1).charCodeAt(0);
+  var jong = (c >= 0xAC00 && c <= 0xD7A3) ? (c - 0xAC00) % 28 : 0;
+  switch(pair) {
+    case '이/가': return jong ? '이' : '가';
+    case '은/는': return jong ? '은' : '는';
+    case '을/를': return jong ? '을' : '를';
+    case '와/과': case '과/와': return jong ? '과' : '와';
+    case '으로/로': return (jong === 0 || jong === 8) ? '로' : '으로';
+    case '이나/나': return jong ? '이나' : '나';
+  }
+  return '';
+}
 
 // Dialogue state
 var dlgQueue = [], dlgTyping = false, dlgTypeTimer = null;
@@ -1035,17 +1051,27 @@ function topicKey() {
 }
 
 /* ═══════ REACTION PATTERNS ═══════ */
-var RX_UP = [
-  [{c:'bt',t:'음...'},{c:'rb',t:'...뭐야뭐야?? 뭐가 보여?!'},{c:'bt',t:'...흥미로운 카드입니다.'}],
-  [{c:'rb',t:'우와!! 이 카드!!'},{c:'bt',t:'후후... 이 카드가 나왔군요.'}],
-  [{c:'bt',t:'오...!'},{c:'rb',t:'!! 이 카드 알아! 알아!!'},{c:'bt',t:'...네, 의미 깊은 카드입니다.'}],
-  [{c:'bt',t:'허...'},{c:'rb',t:'어떤 카드야?! 좋은 거야?!'},{c:'bt',t:'...천천히 이야기해 드리겠습니다.'}],
-  [{c:'bt',t:'...이 카드가.'},{c:'bt',t:'......재미있군요.',pause:600},{c:'rb',t:'뭐가 재미있어!! 빨리 알려줘!!'}],
+var RX_BT_UP = [
+  [{c:'bt',t:'음...',pause:400},{c:'bt',t:'...흥미로운 카드가 나왔군요.'}],
+  [{c:'bt',t:'오...'},{c:'bt',t:'후후... 이 카드가 당신을 골랐습니다.'}],
+  [{c:'bt',t:'......'},{c:'bt',t:'...좋은 기운이 느껴집니다. 천천히 이야기해 드리지요.'}],
+  [{c:'bt',t:'허...'},{c:'bt',t:'의미 깊은 카드입니다. 잠시 들여다보겠습니다.',pause:500}],
 ];
-var RX_REV = [
-  [{c:'bt',t:'...역위치군요.'},{c:'rb',t:'거꾸로다?! 괜찮은 거야?!'},{c:'bt',t:'걱정 마세요. 역위치도 중요한 메시지입니다.'}],
-  [{c:'bt',t:'흠......'},{c:'rb',t:'으... 아저씨 표정이 무서워...'},{c:'bt',t:'...아닙니다. 좀 더 깊이 들여다볼 필요가 있을 뿐입니다.'}],
-  [{c:'bt',t:'역위치... 주의 깊게 봐야겠습니다.'},{c:'rb',t:'무...무서운 건 아니지?!'},{c:'bt',t:'나쁜 카드란 없습니다. 다만 방향이 다를 뿐이지요.'}],
+var RX_BT_REV = [
+  [{c:'bt',t:'...역위치군요.',pause:400},{c:'bt',t:'걱정하실 필요 없습니다. 역위치도 중요한 메시지를 담고 있으니까요.'}],
+  [{c:'bt',t:'흠......'},{c:'bt',t:'좀 더 깊이 들여다봐야 할 것 같습니다. 다만, 나쁜 카드란 없다는 점을 기억해 주세요.'}],
+  [{c:'bt',t:'역위치...',pause:300},{c:'bt',t:'방향이 다를 뿐입니다. 주의 깊게 읽어보겠습니다.'}],
+];
+var RX_RB_UP = [
+  [{c:'rb',t:'이 카드구나...',pause:400},{c:'rb',t:'후후, 좋은 에너지가 느껴져.'}],
+  [{c:'rb',t:'어...'},{c:'rb',t:'있잖아, 이 카드가 널 골랐어. 인연이 느껴진다.'}],
+  [{c:'rb',t:'......'},{c:'rb',t:'이 카드, 하고 싶은 말이 많은 것 같아. 천천히 읽어볼게.'}],
+  [{c:'rb',t:'오...',pause:300},{c:'rb',t:'흥미로운 카드가 나왔네. 잠깐, 잘 들여다볼게.'}],
+];
+var RX_RB_REV = [
+  [{c:'rb',t:'거꾸로 나왔네...',pause:400},{c:'rb',t:'괜찮아, 역위치는 다른 각도에서 보라는 뜻이야. 나쁜 게 아니야.'}],
+  [{c:'rb',t:'음...'},{c:'rb',t:'역위치구나. 이 에너지가 좀 다른 방향으로 흐르고 있나 봐. 자세히 봐볼게.'}],
+  [{c:'rb',t:'......',pause:300},{c:'rb',t:'거꾸로 온 카드는 "여기를 좀 봐줘"라는 신호야. 겁먹지 않아도 돼.'}],
 ];
 
 /* ═══════ CARD UI ═══════ */
@@ -1100,7 +1126,12 @@ function showCards() {
 }
 
 function playReaction(card) {
-  var pool = card.isReversed ? RX_REV : RX_UP;
+  var pool;
+  if (selectedChar === 'bt') {
+    pool = card.isReversed ? RX_BT_REV : RX_BT_UP;
+  } else {
+    pool = card.isReversed ? RX_RB_REV : RX_RB_UP;
+  }
   var rx = pool[Math.floor(Math.random()*pool.length)];
   rx.forEach(function(r){ say(r.c, r.t, {pause:r.pause||0}); });
   dlgCallback = function() {
@@ -1115,108 +1146,301 @@ function toRoman(n){
   return r;
 }
 
-/* ═══════ READING ═══════ */
+/* ═══════ READING — DIALOGUE-BASED DELIVERY ═══════ */
 function startReading() {
   hideDlg();
   $cardArea.classList.remove('show');
-  if (selectedChar==='bt') say('bt','자, 카드가 모두 나왔으니... 이야기를 시작하겠습니다.',{anim:'thinking'});
-  else say('rb','우와~!! 카드가 다 나왔어!! 두근두근...!! 뭐라고 써있을까?!',{anim:'excited'});
-  dlgCallback = function(){ setTimeout(showReadingPanel, 500); };
+
+  // Generate all reading content
+  storedReadings = generateAllReadings();
+
+  // Opening line
+  if (selectedChar === 'bt') {
+    say('bt', '자, 카드가 모두 나왔으니... 하나하나 이야기를 풀어보겠습니다.', {anim:'thinking'});
+  } else {
+    say('rb', '카드가 다 나왔어. 자, 하나씩 천천히 읽어볼게.', {anim:'talking'});
+  }
+
+  dlgCallback = function() { deliverCardReading(0); };
 }
 
-function showReadingPanel() {
-  hideDlg();
-  var panel = document.getElementById('readingPanel');
-  var cont = document.getElementById('readingContent');
-  cont.innerHTML = '';
-
-  var topicNames={love:'💕 연애운',career:'💼 직업운',finance:'💰 재물운',today:'✨ 오늘의 운세',general:'🔮 종합운'};
-  var title = document.createElement('div'); title.className='reading-title';
-  title.textContent=(topicNames[selectedTopic]||'🔮 타로')+' 리딩';
-  cont.appendChild(title);
-
-  var posNames = selectedSpread===3 ? ['🌙 과거의 흐름','☀️ 현재의 상황','⭐ 미래의 방향'] : ['🔮 당신의 카드'];
-
-  drawnCards.forEach(function(card, i) {
-    var sec = document.createElement('div'); sec.className='reading-card-section';
-
-    var hdr = document.createElement('div'); hdr.className='reading-card-header';
-    hdr.textContent=(CARD_SYMBOLS[card.number]||'✦')+' '+card.name_kr+' ('+card.name_en+') — '+(card.isReversed?'역위치':'정위치');
-    sec.appendChild(hdr);
-
-    if(posNames[i]){ var ps=document.createElement('div');ps.className='reading-card-pos';ps.textContent=posNames[i];sec.appendChild(ps); }
-
-    var interp = document.createElement('div'); interp.className='reading-interp';
-
-    var charIcon = selectedChar==='rb' ? '🐰 루나' : '🤵 바텐더';
-    var charClass = selectedChar==='rb' ? 'rb-label' : 'bt-label';
-
-    var core = card.isReversed ? card.core_meaning.reversed : card.core_meaning.upright;
-    var p1 = document.createElement('p');
-    p1.innerHTML='<span class="char-label '+charClass+'">'+charIcon+':</span> "'+core+'"';
-    interp.appendChild(p1);
-
-    var tk = topicKey();
-    if(card.situation_snippets && card.situation_snippets[tk]){
-      var p2 = document.createElement('p');
-      p2.innerHTML='<span class="char-label '+charClass+'">'+charIcon+':</span> "'+card.situation_snippets[tk]+'"';
-      interp.appendChild(p2);
-    }
-
-    var p3 = document.createElement('p');
-    if (selectedChar==='rb') {
-      p3.innerHTML='<span class="char-label rb-label">🐰 루나:</span> "'+lunaReact(card)+'"';
+function deliverCardReading(cardIdx) {
+  if (cardIdx >= storedReadings.cards.length) {
+    if (storedReadings.synopsis) {
+      deliverSynopsis();
     } else {
-      // Bartender gets a more analytical reaction instead of Luna's
-      var btReact = card.isReversed
-        ? '역위치가 나왔군요... 이것은 경고가 아니라, 다른 각도에서 바라보라는 의미입니다.'
-        : '좋은 기운이 느껴집니다. 이 카드의 메시지를 마음에 담아두세요.';
-      p3.innerHTML='<span class="char-label bt-label">🤵 바텐더:</span> "'+btReact+'"';
+      deliverFinalMessage();
     }
-    interp.appendChild(p3);
+    return;
+  }
 
-    var kws = card.isReversed ? card.keywords.reversed : card.keywords.upright;
-    var p4 = document.createElement('p');
-    p4.style.cssText='font-size:.78rem;color:var(--text-3);margin-top:.3rem';
-    p4.textContent='키워드: '+kws.join(', ');
-    interp.appendChild(p4);
+  var cardReading = storedReadings.cards[cardIdx];
+  var ch = selectedChar;
 
-    sec.appendChild(interp);
-    cont.appendChild(sec);
+  // Transition between cards
+  if (cardIdx > 0) {
+    if (ch === 'bt') {
+      say('bt', '......다음 카드를 보겠습니다.', {anim:'thinking', pause:400});
+    } else {
+      say('rb', '...좋아, 다음 카드.', {pause:300});
+    }
+  }
+
+  // Deliver each line
+  cardReading.lines.forEach(function(line) {
+    say(ch, line);
   });
 
-  // Summary
-  var sum = document.createElement('div'); sum.className='reading-summary';
-  if (selectedChar==='rb') {
-    sum.innerHTML =
-      '<div class="reading-summary-title">✦ FINAL MESSAGE ✦</div>'+
-      '<p class="reading-interp"><span class="char-label rb-label">🐰 루나:</span> "'+finalRb()+'"</p>';
+  dlgCallback = function() { deliverCardReading(cardIdx + 1); };
+}
+
+function deliverSynopsis() {
+  var ch = selectedChar;
+  if (ch === 'bt') {
+    say('bt', '...그리고, 세 카드를 함께 놓고 보면 하나의 흐름이 보입니다.', {anim:'thinking', pause:500});
   } else {
-    sum.innerHTML =
-      '<div class="reading-summary-title">✦ FINAL MESSAGE ✦</div>'+
-      '<p class="reading-interp"><span class="char-label bt-label">🤵 바텐더:</span> "'+finalBt()+'"</p>';
+    say('rb', '...있잖아, 세 카드를 같이 보면 이야기가 하나로 이어져.', {pause:400});
   }
-  cont.appendChild(sum);
 
-  panel.classList.add('show');
-  document.getElementById('restartBtn').classList.add('show');
+  storedReadings.synopsis.forEach(function(line) {
+    say(ch, line);
+  });
+
+  dlgCallback = deliverFinalMessage;
 }
 
-function lunaReact(card) {
-  var up=['우와~! 이 카드 진짜 좋은 거야!! 대박이다!!','좋아좋아~!! 이건 분명 좋은 의미야!!','이 카드 나한테도 나온 적 있어! 엄청 좋았어!!','헤헤~ 좋은 카드다! 기분 좋지 않아?!','우와앙! 이거 보면 기분이 좋아진다~!'];
-  var rev=['으으... 역위치라니... 근데 괜찮아! 나쁜 카드는 없다고 아저씨가 그랬어!','어... 좀 걱정되지만... 이것도 다 의미가 있는 거야!! 힘내!!','역위치... 조금 주의하라는 뜻이야! 충분히 잘 해낼 수 있어!','걱정 마! 역위치는 다른 시각으로 보라는 뜻이래! 난 믿어!!'];
-  var pool = card.isReversed ? rev : up;
-  return pool[Math.floor(Math.random()*pool.length)];
+function deliverFinalMessage() {
+  var ch = selectedChar;
+  storedReadings.final.forEach(function(line) {
+    say(ch, line);
+  });
+
+  dlgCallback = showReplayOptions;
 }
 
-function finalBt() {
-  var m=['카드는 길을 비출 뿐, 걸어가는 것은 당신의 몫입니다. 오늘의 메시지가 마음에 작은 등불이 되기를 바랍니다.','운명이란 정해진 길이 아니라, 매 순간의 선택이 만들어가는 이야기입니다. 현명한 선택의 나침반이 되었으면 합니다.','별빛 아래서 비추어진 카드의 메시지를 마음에 새기시되, 최종 결정은 항상 당신의 직관을 따르세요.','타로는 거울과 같습니다. 카드가 보여준 것은 당신의 마음속에 이미 있던 답일지도 모릅니다.','오늘 밤의 별빛이 당신에게 좋은 기운을 전해주기를... 언제든 다시 찾아오세요.'];
-  return m[Math.floor(Math.random()*m.length)];
+function showReplayOptions() {
+  var opts = [];
+
+  storedReadings.cards.forEach(function(card, i) {
+    var label = storedReadings.cards.length === 1
+      ? '🃏 카드 해석 다시 듣기'
+      : '🃏 ' + card.cardName + ' 해석 다시 듣기';
+    opts.push({
+      text: label,
+      action: (function(idx) { return function() { replayCard(idx); }; })(i)
+    });
+  });
+
+  if (storedReadings.synopsis) {
+    opts.push({
+      text: '🔮 종합 흐름 다시 듣기',
+      action: replaySynopsis
+    });
+  }
+
+  opts.push({
+    text: '✨ 충분히 들었어요',
+    action: endReading
+  });
+
+  if (selectedChar === 'bt') {
+    say('bt', '...혹시 다시 듣고 싶은 부분이 있으시다면, 말씀해 주세요.');
+  } else {
+    say('rb', '다시 듣고 싶은 부분이 있으면 골라봐.');
+  }
+  dlgCallback = function() {
+    showOpts(opts);
+  };
 }
 
-function finalRb() {
-  var m=['또 보러 와~!! 나 기다리고 있을게!! 다음에는 더 재밌는 카드가 나올지도 몰라!','오늘 타로 재밌었지?! 나도 재밌었어!! 꼭 다시 와!!','힘내!! 루나가 응원한다!! 다음에 또 놀러 와~!!','고마워 와줘서!! 카드가 좋은 길을 알려줬을 거야! 파이팅!!','바이바이~!! 아, 다음에 오면 과자 좀 가져와!! ...농담이야! 헤헤!!'];
-  return m[Math.floor(Math.random()*m.length)];
+function replayCard(idx) {
+  var cardReading = storedReadings.cards[idx];
+  var ch = selectedChar;
+  cardReading.lines.forEach(function(line) {
+    say(ch, line);
+  });
+  dlgCallback = showReplayOptions;
+}
+
+function replaySynopsis() {
+  var ch = selectedChar;
+  storedReadings.synopsis.forEach(function(line) {
+    say(ch, line);
+  });
+  dlgCallback = showReplayOptions;
+}
+
+function endReading() {
+  var ch = selectedChar;
+  if (ch === 'bt') {
+    say('bt', '오늘 밤의 별빛이 당신에게 좋은 길을 비춰주기를... 언제든 다시 찾아오세요.');
+  } else {
+    say('rb', '또 보고 싶으면 언제든 와. 별빛은 항상 여기 있으니까.');
+  }
+  dlgCallback = function() {
+    hideDlg();
+    document.getElementById('restartBtn').classList.add('show');
+  };
+}
+
+/* ═══════ READING CONTENT GENERATION ═══════ */
+function generateAllReadings() {
+  var result = { cards: [], synopsis: null, final: [] };
+  var ch = selectedChar;
+  var topicNames = {love:'연애운',career:'직업운',finance:'재물운',today:'오늘의 운세',general:'종합운'};
+  var tl = topicNames[selectedTopic] || '운세';
+  var tk = topicKey();
+
+  drawnCards.forEach(function(card, idx) {
+    var lines = [];
+    var isR = card.isReversed;
+    var kws = isR ? card.keywords.reversed : card.keywords.upright;
+    var core = isR ? card.core_meaning.reversed : card.core_meaning.upright;
+    var snip = (card.situation_snippets && card.situation_snippets[tk]) || '';
+
+    // ── LINE 1: Position intro ──
+    if (selectedSpread === 1) {
+      if (ch === 'bt') {
+        lines.push(isR
+          ? card.name_kr + ' 카드가 역위치로 나왔습니다. 이 에너지가 지금 어딘가에서 막히거나, 본래의 방향과 다르게 흐르고 있다는 신호입니다.'
+          : card.name_kr + ' 카드입니다. 이 카드가 오늘 당신 앞에 놓인 건... 우연이 아닐 겁니다.');
+      } else {
+        lines.push(isR
+          ? card.name_kr + ' 카드인데... 거꾸로 나왔네. 있잖아, 이건 이 에너지가 지금 좀 꼬여있다는 뜻이야.'
+          : card.name_kr + ' 카드다. 후후, 이 카드가 널 골랐어.');
+      }
+    } else {
+      var posLabels = ['과거', '현재', '미래'];
+      var pos = posLabels[idx] || '';
+      if (ch === 'bt') {
+        if (idx === 0) {
+          lines.push(isR
+            ? pos + '의 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 역위치로 놓여 있습니다. 지나온 시간 속에서 이 에너지가 제대로 표현되지 못하고, 어딘가 눌려 있었던 것 같군요. 그때의 감정이나 상황이 지금도 어떤 형태로 영향을 미치고 있을 수 있습니다.'
+            : pos + '의 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 있습니다. 지나온 시간 속에서 이 에너지가 당신에게 깊이 자리해 왔다는 뜻입니다. 어떤 경험이 떠오르십니까? 그것이 무엇이든, 지금의 당신을 만들어온 중요한 토대가 되었을 겁니다.');
+        } else if (idx === 1) {
+          lines.push(isR
+            ? '현재의 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 역위치로 놓여 있습니다. 이 에너지가 지금 막혀 있거나, 제대로 흐르지 못하고 있다는 신호입니다. 답답하게 느끼시는 부분이 있다면... 이 카드가 바로 그 지점을 짚고 있을 겁니다. 억지로 해결하려 하기보다는, 어디서 막혀 있는지를 먼저 솔직하게 인정해 보세요.'
+            : '현재의 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 있습니다. 이 순간, 이 에너지가 당신 곁에서 강하게 흐르고 있습니다. 지금 느끼시는 감정이나 상황과 이 카드의 에너지를 한번 연결해 보세요. 상당히 정확하게 비추고 있을 겁니다.');
+        } else {
+          lines.push(isR
+            ? '앞으로의 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 역위치로 놓였습니다. 이 에너지가 막힌 형태로 다가올 수 있다는 신호이니, 지금부터 미리 인식해 두시는 것이 좋겠습니다. 역위치가 무조건 나쁜 것이 아니라, 이 에너지가 균형을 잃었을 때 어떻게 나타나는지를 미리 알아두면 슬기롭게 대응할 수 있습니다.'
+            : '앞으로의 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 놓여 있습니다. 이 에너지가 당신의 앞길에서 기다리고 있군요. 아직 일어나지 않은 일이니, 지금부터 이 흐름을 의식하면서 어떻게 맞이할지 생각해 두시면 훨씬 수월하게 나아갈 수 있을 겁니다.');
+        }
+      } else {
+        if (idx === 0) {
+          lines.push(isR
+            ? pos + ' 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 거꾸로 나왔어. 예전에 이 에너지가 잘 풀리지 않았었나 봐. 그때의 흔적이 아직도 남아있을 수 있거든. 과거의 일이라고 그냥 넘기기보다는, 그게 지금 너한테 어떻게 남아있는지 한번 들여다볼 필요가 있어.'
+            : pos + ' 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 있네. 있잖아, 이건 네가 여기까지 오는 동안 이 에너지가 계속 함께했다는 뜻이야. 어떤 경험이 떠올라? 그게 뭐든, 그 시간들이 지금의 너를 만들어온 토대가 됐을 거야.');
+        } else if (idx === 1) {
+          lines.push(isR
+            ? '지금 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 거꾸로 있어. 이 에너지가 지금 좀 막혀있는 것 같아. 답답한 느낌, 혹시 있지 않아? 억지로 풀려고 하기보다는, 어디서 막혀있는지 먼저 솔직하게 느껴보는 게 첫걸음이야.'
+            : '지금 자리에 ' + card.name_kr + '. 이 에너지가 바로 지금 네 곁에 있어. 지금 네가 느끼는 감정이나 상황이랑 이 카드를 한번 연결해봐. 꽤 정확하게 비추고 있을 거야.');
+        } else {
+          lines.push(isR
+            ? '앞으로의 자리에 ' + card.name_kr + j(card.name_kr,'이/가') + ' 거꾸로 나왔어. 이 에너지가 좀 비틀어진 채로 올 수 있으니까, 미리 알아두면 좋겠어. 역위치라고 무조건 나쁜 게 아니야. 이 에너지가 균형을 잃었을 때 어떤 모습인지 미리 알고 있으면 그만큼 잘 대응할 수 있거든.'
+            : '앞으로의 자리에 ' + card.name_kr + '. 이 에너지가 너를 향해 오고 있어. 아직 일어나지 않은 일이니까, 지금부터 이 흐름을 의식하면서 어떻게 맞이할지 마음속으로 그려봐. 준비된 마음은 같은 흐름도 다르게 받아들이거든.');
+        }
+      }
+    }
+
+    // ── LINE 2: Core meaning ──
+    lines.push(core);
+
+    // ── LINE 3: Topic interpretation ──
+    if (snip) {
+      if (ch === 'bt') {
+        lines.push(tl + ' 쪽에서 이 카드를 보자면... ' + snip);
+      } else {
+        lines.push(tl + '에 관해서 말하자면, ' + snip);
+      }
+    }
+
+    // ── LINE 4: Keyword analysis ──
+    if (kws.length >= 3) {
+      if (ch === 'bt') {
+        lines.push(isR
+          ? '이 카드의 키워드는 \'' + kws[0] + '\', \'' + kws[1] + '\', \'' + kws[2] + '\'입니다. 역위치이므로 이 에너지들이 왜곡되거나 과도하게 나타나고 있을 가능성이 높습니다. 혹시 \'' + kws[0] + '\' 쪽에서 막히는 느낌이 있다면, 그것이 바로 이 카드의 핵심 메시지입니다. 거기서부터 천천히 풀어나가시면 됩니다.'
+          : '이 카드의 키워드는 \'' + kws[0] + '\', \'' + kws[1] + '\', \'' + kws[2] + '\'입니다. 이 중에서 지금 당신의 상황과 가장 가까이 느껴지는 것이 있다면... 그것이 카드가 직접 건네는 메시지일 겁니다. 특히 \'' + kws[0] + '\'의 에너지가 지금 가장 강하게 작용하고 있을 가능성이 높습니다.');
+      } else {
+        lines.push(isR
+          ? '\'' + kws[0] + '\', \'' + kws[1] + '\', \'' + kws[2] + '\'... 이 키워드들이 지금은 좀 꼬여있는 상태야. 혹시 \'' + kws[0] + '\' 쪽에서 뭔가 걸리는 느낌이 있으면, 그게 바로 카드가 하고 싶은 말이야. 거기서부터 천천히 풀어나가면 돼.'
+          : '\'' + kws[0] + '\', \'' + kws[1] + '\', \'' + kws[2] + '\'... 이 세 가지가 이 카드의 에너지야. 이 중에서 네 마음에 가장 와닿는 게 있으면, 그게 카드가 너한테 직접 하는 말이야. 특히 \'' + kws[0] + '\'의 기운이 지금 가장 강할 거야.');
+      }
+    }
+
+    // ── LINE 5: Practical advice ──
+    if (ch === 'bt') {
+      var btAdv = isR
+        ? ['막혀 있는 에너지를 억지로 풀려 하면 오히려 더 단단해집니다. 지금은 그 흐름을 부드럽게 인식하는 것만으로도 충분합니다. 어떤 두려움이나 저항이 있는지 솔직하게 바라보시고... 자신에게 좀 너그러운 시간을 허락해 보세요.',
+           '역위치의 에너지는 나쁜 신호가 아닙니다. 방향을 다시 잡을 수 있는 기회가 온 것이지요. 지금부터 작은 것 하나씩 의식적으로 바꿔나가면, 이 에너지를 훨씬 균형 잡힌 형태로 맞이할 수 있을 겁니다.',
+           '억눌렸던 에너지는 사라지지 않습니다. 어딘가에 쌓여 있지요. 그것을 판단하거나 비난하지 말고, 있는 그대로 바라보세요. 그것이 치유의 시작입니다.']
+        : ['이 에너지가 지금 주변에서 흐르고 있다는 걸 아셨으니, 오늘 딱 한 가지만 해보세요. 이 카드가 가리키는 방향으로 아주 작은 행동 하나. 거창할 필요 없습니다. 지금 이 시기엔 작은 것 하나가 생각보다 큰 변화를 만들어낼 수 있으니까요.',
+           '이 카드의 에너지를 마음에 담아두세요. 일상 속에서 이 에너지가 어디서 살아 움직이는지 느껴보시면... 카드가 전하려는 메시지가 한결 선명해질 겁니다.',
+           '준비된 사람에게는 같은 흐름도 다르게 작용합니다. 지금부터 이 에너지를 의식하면서, 그것이 다가왔을 때 어떻게 받아들이고 싶은지를 마음속으로 그려보세요.'];
+      lines.push(btAdv[idx % btAdv.length]);
+    } else {
+      var rbAdv = isR
+        ? ['거꾸로 나왔다고 겁먹지 마. 이건 방향이 좀 다르다는 거야. 그 꼬인 부분을 살살 풀어주면 돼. 조급해하지 말고, 천천히.',
+           '있잖아, 역위치는 "이쪽은 좀 조심해"라는 친절한 알림 같은 거야. 나쁜 게 아니라 미리 알려주는 거니까, 오히려 고마운 거지.',
+           '지금 좀 막혀있는 느낌이 들더라도 괜찮아. 그 느낌을 그냥 인정하는 것부터 시작하면 돼. 억지로 안 해도 돼, 천천히 가도 괜찮아.']
+        : ['이 에너지가 지금 네 곁에 있으니까, 오늘 하루 살짝 의식해봐. 일상 속에서 "아, 이거구나" 하는 순간이 올 거야.',
+           '카드가 보여주는 건 가능성이야. 네가 어떻게 움직이느냐에 따라 그 가능성이 진짜가 되는 거지. 넌 할 수 있어, 분명히.',
+           '이 카드의 에너지를 마음에 담아두면, 필요한 순간에 저절로 떠오를 거야. 별빛이 그렇게 작동하거든.'];
+      lines.push(rbAdv[idx % rbAdv.length]);
+    }
+
+    result.cards.push({
+      cardName: card.name_kr,
+      lines: lines
+    });
+  });
+
+  // ── Synopsis for 3-card spread ──
+  if (selectedSpread === 3 && drawnCards.length === 3) {
+    result.synopsis = generateSynopsis(ch, tl);
+  }
+
+  // ── Final message ──
+  if (ch === 'bt') {
+    var btFinals = [
+      '카드는 길을 비출 뿐, 걸어가는 것은 당신의 몫입니다. 오늘의 메시지가 마음에 작은 등불이 되기를.',
+      '운명이란 정해진 길이 아니라, 매 순간의 선택이 만들어가는 이야기입니다. 현명한 선택의 나침반이 되었으면 합니다.',
+      '타로는 거울과 같습니다. 카드가 보여준 것은 당신 마음속에 이미 있던 답일지도 모릅니다.',
+      '별빛 아래서 비추어진 카드의 메시지를 마음에 새기시되, 최종 결정은 항상 당신의 직관을 따르세요.'
+    ];
+    result.final = [btFinals[Math.floor(Math.random() * btFinals.length)]];
+  } else {
+    var rbFinals = [
+      '카드가 할 말은 다 했어. 나머지는 네가 결정하는 거야. 넌 생각보다 많은 걸 이미 알고 있거든.',
+      '있잖아, 별빛 아래서 읽은 카드는 특별해. 오늘 들은 이야기, 마음 한구석에 담아둬.',
+      '이 카드들이 네 마음속에 이미 있던 답을 비춰준 거야. 그걸 믿어도 돼.',
+      '오늘 밤의 별빛이 네게 좋은 기운을 전해줬기를... 또 보고 싶으면 언제든 와.'
+    ];
+    result.final = [rbFinals[Math.floor(Math.random() * rbFinals.length)]];
+  }
+
+  return result;
+}
+
+function generateSynopsis(ch, tl) {
+  var lines = [];
+  var c0 = drawnCards[0], c1 = drawnCards[1], c2 = drawnCards[2];
+  var r0 = c0.isReversed, r1 = c1.isReversed, r2 = c2.isReversed;
+  var kw0 = (r0 ? c0.keywords.reversed : c0.keywords.upright)[0];
+  var kw1 = (r1 ? c1.keywords.reversed : c1.keywords.upright)[0];
+  var kw2 = (r2 ? c2.keywords.reversed : c2.keywords.upright)[0];
+
+  if (ch === 'bt') {
+    lines.push(tl + '에 관해 세 장이 그리는 이야기가 있습니다. \'' + kw0 + '\'에서 \'' + kw1 + '\'' + j(kw1,'을/를') + ' 거쳐 \'' + kw2 + '\'' + j(kw2,'으로/로') + '... 지금 당신의 흐름이 이 방향을 가리키고 있습니다.');
+    lines.push('과거의 ' + c0.name_kr + j(c0.name_kr,'이/가') + ' 남긴 에너지가 현재의 ' + c1.name_kr + j(c1.name_kr,'을/를') + ' 만들었고, 그것이 다시 미래의 ' + c2.name_kr + j(c2.name_kr,'으로/로') + ' 이어지고 있습니다.' + (r2 ? ' 다만 미래의 카드가 역위치이니, \'' + kw2 + '\'의 에너지가 막히지 않도록 지금부터 준비해 두시는 것이 좋겠습니다.' : ' \'' + kw2 + '\'의 에너지가 자연스럽게 찾아올 수 있도록, 지금부터 그 흐름을 열어두세요.'));
+    lines.push('각 카드의 메시지를 떠올리면서, 이 연결이 지금 당신에게 어떻게 닿는지 느껴보시기 바랍니다.');
+  } else {
+    lines.push(tl + '에 관해 세 카드가 하나의 이야기를 하고 있어. \'' + kw0 + '\'에서 \'' + kw1 + '\'' + j(kw1,'을/를') + ' 지나 \'' + kw2 + '\'' + j(kw2,'으로/로') + '... 이게 지금 네 흐름이야.');
+    lines.push(c0.name_kr + j(c0.name_kr,'이/가') + ' 심어놓은 씨앗이 ' + c1.name_kr + j(c1.name_kr,'을/를') + ' 거쳐서 ' + c2.name_kr + j(c2.name_kr,'으로/로') + ' 피어나려 하고 있어.' + (r2 ? ' 근데 마지막 카드가 거꾸로니까, \'' + kw2 + '\' 부분은 좀 신경 써줘야 할 것 같아.' : ' \'' + kw2 + '\'의 에너지가 다가올 수 있게 마음을 열어둬.'));
+    lines.push('세 카드를 같이 보면 네 이야기가 보여. 각각의 메시지를 떠올리면서, 지금 네 마음에 어떻게 닿는지 느껴봐.');
+  }
+
+  return lines;
 }
 
 /* ═══════ GAME FLOW ═══════ */
@@ -1284,9 +1508,9 @@ function phaseGreeting() {
     say('bt','저는 이곳의 안내인... 밤의 바텐더라고 불러주시면 됩니다.');
     say('bt','자... 오늘 이 늦은 밤에 찾아오신 건, 분명 이유가 있으시겠지요?');
   } else {
-    say('rb','!! 손님이다!! 안녕안녕~!!',{anim:'excited',pause:500});
-    say('rb','헤헤~ 난 루나! 타로 보는 거 진짜진짜 좋아해!!');
-    say('rb','오늘 밤에 여기까지 와주다니~! 뭔가 궁금한 게 있지?!');
+    say('rb','어머, 손님이다. 어서 와, 기다리고 있었어.',{anim:'excited',pause:500});
+    say('rb','나는 루나. 이 별빛 아래서 카드를 읽는 걸 좋아하는 토끼야.');
+    say('rb','이 밤에 여기까지 찾아온 거면... 분명 마음에 품고 온 이야기가 있겠지?');
   }
   dlgCallback = function(){
     showOpts([
@@ -1301,7 +1525,7 @@ function respA(){
   if (selectedChar==='bt') {
     say('bt','고민이라... 이곳을 찾아오신 것만으로도 이미 첫 걸음을 떼신 겁니다.');
   } else {
-    say('rb','걱정 마! 카드가 길을 알려줄 거야! 루나가 도와줄게!!',{anim:'excited'});
+    say('rb','고민이 있구나. 괜찮아, 카드가 길을 비춰줄 거야. 같이 들여다보자.',{anim:'talking'});
   }
   dlgCallback=phaseTopic;
 }
@@ -1309,7 +1533,7 @@ function respB(){
   if (selectedChar==='bt') {
     say('bt','후후, 재미라 하셨지만... 카드는 종종 진심을 읽어내곤 하죠.');
   } else {
-    say('rb','맞아맞아! 재미로 왔다가 깜짝 놀라는 사람 엄청 많아!',{anim:'excited'});
+    say('rb','후후, 재미로 시작해도 괜찮아. 카드는 그런 마음도 잘 읽어내거든.',{anim:'talking'});
   }
   dlgCallback=phaseTopic;
 }
@@ -1318,14 +1542,14 @@ function respC(){
     say('bt','흥미로운 질문이시군요.',{anim:'thinking'});
     say('bt','타로는 미래를 \'예언\'하지 않습니다. 다만... 마음 속 이미 알고 있는 답을 비추어 보여줄 뿐이지요.');
   } else {
-    say('rb','음... 어려운 건 모르겠지만! 카드는 신기하게도 딱 맞는 걸 보여줘! 해보면 알 거야!');
+    say('rb','좋은 질문이야. 타로는 미래를 정해주는 게 아니라, 네 안에 이미 있는 답을 비춰주는 거야. 해보면 느낄 수 있을 거야.');
   }
   dlgCallback=phaseTopic;
 }
 
 function phaseTopic() {
   if (selectedChar==='bt') say('bt','그렇다면... 오늘은 어떤 이야기를 나눠볼까요?');
-  else say('rb','자~ 뭐가 궁금한 거야? 골라골라~!');
+  else say('rb','자, 어떤 이야기가 듣고 싶어? 마음이 가는 쪽을 골라봐.');
   dlgCallback = function(){
     hideDlg();
     $topicSel.innerHTML='';
@@ -1350,15 +1574,15 @@ function onTopicPicked(t) {
   if (selectedChar==='bt') {
     say('bt', '...'+t.label+'이시군요. 좋습니다.');
   } else {
-    var rr={love:'연애!! 두근두근하는 거~!!',career:'직업!! 열심히 일하는 거!!',finance:'돈돈!! 부자 되는 거!!',today:'오늘 운세!! 궁금궁금!!',general:'종합!! 다 알 수 있어!!'};
-    say('rb', rr[t.id]||'좋아좋아!!', {anim:'excited'});
+    var rr={love:'연애운이구나... 후후, 별들이 뭐라고 하는지 들어보자.',career:'일과 성장에 대한 이야기구나. 카드가 좋은 방향을 보여줄 거야.',finance:'재물운... 알겠어. 이 흐름이 어디로 향하는지 같이 봐보자.',today:'오늘 하루의 흐름이 궁금한 거구나. 좋아, 읽어볼게.',general:'종합운이구나. 전체적인 기운의 흐름을 봐보자.'};
+    say('rb', rr[t.id]||'좋아, 읽어볼게.', {anim:'talking'});
   }
   dlgCallback=phaseSpread;
 }
 
 function phaseSpread() {
   if (selectedChar==='bt') say('bt','카드를 몇 장 뽑으시겠습니까?');
-  else say('rb','카드 몇 장 뽑을 거야? 한 장은 핵심만 딱! 세 장이면 과거-현재-미래! 나는 세 장이 좋아~!');
+  else say('rb','카드를 몇 장 뽑을까? 한 장이면 핵심 메시지 하나, 세 장이면 과거에서 미래까지 흐름을 읽을 수 있어.');
   dlgCallback=function(){
     hideDlg();
     $spreadSel.innerHTML='';
@@ -1381,7 +1605,7 @@ function onSpreadPicked() {
     say('bt','좋습니다. 마음을 가라앉히시고...',{anim:'thinking',pause:300});
     say('bt','카드를 선택해 주세요. 끌리는 카드를 눌러 뒤집으시면 됩니다.');
   } else {
-    say('rb','자~ 집중집중~!! 끌리는 카드를 눌러봐!! 좋은 카드가 나올 거야!!',{anim:'excited'});
+    say('rb','자, 마음을 가라앉히고... 끌리는 카드를 눌러봐. 카드가 널 부르고 있을 거야.',{anim:'talking'});
   }
   dlgCallback=function(){
     hideDlg();
@@ -1398,7 +1622,7 @@ function resetGame() {
   $cardArea.innerHTML='';
   hideDlg();
   drawnCards=[]; flippedCount=0; selectedTopic=''; selectedSpread=1;
-  btAnimState='idle'; rbAnimState='idle';
+  btAnimState='idle'; rbAnimState='idle'; storedReadings=null;
   // Show character select again
   document.getElementById('charSelect').classList.add('show');
 }
