@@ -68,6 +68,25 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .dlg-indicator.hidden{display:none}
 @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
 
+/* ===== DEBUG CONSOLE ===== */
+#debugToggle{position:fixed;bottom:16px;right:16px;z-index:99999;width:44px;height:44px;border-radius:50%;border:1px solid rgba(201,168,76,.3);background:rgba(16,10,32,.85);color:var(--gold);font-size:1.2rem;cursor:pointer;backdrop-filter:blur(8px);transition:all .2s;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(0,0,0,.5)}
+#debugToggle:hover{border-color:var(--gold);box-shadow:0 0 16px rgba(201,168,76,.25)}
+#debugPanel{position:fixed;bottom:70px;right:16px;z-index:99999;width:min(420px,90vw);max-height:50vh;background:rgba(10,6,20,.95);border:1px solid rgba(201,168,76,.25);border-radius:12px;backdrop-filter:blur(12px);display:none;flex-direction:column;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+#debugPanel.show{display:flex}
+.debug-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(201,168,76,.15);font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.15em;color:var(--gold)}
+.debug-header div{display:flex;gap:4px}
+.debug-copy,.debug-clear,.debug-close{border:none;background:rgba(255,255,255,.08);color:var(--text-2);font-size:.7rem;padding:4px 8px;border-radius:6px;cursor:pointer;transition:background .15s}
+.debug-copy:hover,.debug-clear:hover,.debug-close:hover{background:rgba(255,255,255,.15);color:#fff}
+.debug-logs{flex:1;overflow-y:auto;padding:8px 10px;font-family:'Courier New',monospace;font-size:.72rem;line-height:1.5;color:#c0c0c0;max-height:45vh;scrollbar-width:thin;scrollbar-color:rgba(201,168,76,.3) transparent}
+.debug-logs::-webkit-scrollbar{width:5px}
+.debug-logs::-webkit-scrollbar-thumb{background:rgba(201,168,76,.3);border-radius:3px}
+.debug-entry{padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04);word-break:break-all}
+.debug-entry.log{color:#c0c0c0}
+.debug-entry.info{color:#6eb5ff}
+.debug-entry.warn{color:#ffd666}
+.debug-entry.error{color:#ff6b6b}
+.debug-time{color:var(--text-3);margin-right:6px}
+
 /* ===== OPTIONS ===== */
 #options{position:fixed;bottom:0;left:0;right:0;z-index:65;padding:0 1rem 1.2rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;opacity:0;transform:translateY(20px);transition:all .4s;pointer-events:none}
 #options.show{opacity:1;transform:translateY(0);pointer-events:auto}
@@ -198,7 +217,100 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 
 <button id="restartBtn">🔮 다시 보기</button>
 
+<!-- DEBUG CONSOLE -->
+<button id="debugToggle">🐛</button>
+<div id="debugPanel">
+  <div class="debug-header">
+    <span>Debug Console</span>
+    <div>
+      <button class="debug-copy" id="debugCopy">📋 Copy</button>
+      <button class="debug-clear" id="debugClear">🗑</button>
+      <button class="debug-close" id="debugClose">✕</button>
+    </div>
+  </div>
+  <div class="debug-logs" id="debugLogs"></div>
+</div>
+
 <script>
+// =============================================
+//  DEBUG CONSOLE — intercept all console output
+// =============================================
+(function(){
+  var _logs = [];
+  var _maxLogs = 500;
+  var _origLog = console.log, _origWarn = console.warn, _origErr = console.error, _origInfo = console.info;
+
+  function _ts(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2)+'.'+('00'+d.getMilliseconds()).slice(-3);}
+
+  function _capture(level, args){
+    var msg = Array.prototype.map.call(args, function(a){
+      if(a instanceof Error) return a.message + '\n' + (a.stack||'');
+      if(typeof a === 'object') try{ return JSON.stringify(a); }catch(e){ return String(a); }
+      return String(a);
+    }).join(' ');
+    _logs.push({time:_ts(), level:level, msg:msg});
+    if(_logs.length > _maxLogs) _logs.shift();
+    _renderEntry(_logs[_logs.length-1]);
+  }
+
+  function _renderEntry(entry){
+    var el = document.getElementById('debugLogs');
+    if(!el) return;
+    var div = document.createElement('div');
+    div.className = 'debug-entry ' + entry.level;
+    div.innerHTML = '<span class="debug-time">' + entry.time + '</span>' + _esc(entry.msg);
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function _esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  console.log   = function(){ _origLog.apply(console, arguments);   _capture('log', arguments); };
+  console.info  = function(){ _origInfo.apply(console, arguments);  _capture('info', arguments); };
+  console.warn  = function(){ _origWarn.apply(console, arguments);  _capture('warn', arguments); };
+  console.error = function(){ _origErr.apply(console, arguments);   _capture('error', arguments); };
+
+  // Catch uncaught errors
+  window.addEventListener('error', function(e){
+    _capture('error', ['[UNCAUGHT] ' + e.message + ' at ' + (e.filename||'?') + ':' + (e.lineno||'?')]);
+  });
+  window.addEventListener('unhandledrejection', function(e){
+    _capture('error', ['[PROMISE] ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason))]);
+  });
+
+  // UI wiring (after DOM ready)
+  function _initDebugUI(){
+    var toggle = document.getElementById('debugToggle');
+    var panel = document.getElementById('debugPanel');
+    var logs = document.getElementById('debugLogs');
+    if(!toggle || !panel) return;
+
+    toggle.addEventListener('click', function(){ panel.classList.toggle('show'); });
+    document.getElementById('debugClose').addEventListener('click', function(){ panel.classList.remove('show'); });
+    document.getElementById('debugClear').addEventListener('click', function(){ _logs=[]; logs.innerHTML=''; });
+    document.getElementById('debugCopy').addEventListener('click', function(){
+      var text = _logs.map(function(l){ return '['+l.time+'] ['+l.level.toUpperCase()+'] '+l.msg; }).join('\n');
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){
+          var btn = document.getElementById('debugCopy');
+          btn.textContent='✅ Copied!'; setTimeout(function(){btn.textContent='📋 Copy';},1500);
+        });
+      } else {
+        var ta = document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+        ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        var btn = document.getElementById('debugCopy');
+        btn.textContent='✅ Copied!'; setTimeout(function(){btn.textContent='📋 Copy';},1500);
+      }
+    });
+
+    // Render existing logs
+    _logs.forEach(_renderEntry);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', _initDebugUI);
+  else _initDebugUI();
+})();
+
 // =============================================
 //  STARLIGHT TAROT — 3D Tarot Reading Experience
 //  Bartender (procedural) + Rabbit (GLB) + Dialogue
@@ -258,18 +370,23 @@ var $options, $topicSel, $spreadSel, $cardArea;
 
 /* ═══════ THREE.JS BOOTSTRAP ═══════ */
 function initThree(onReady) {
+  console.info('[LOAD] Three.js 로딩 시작...');
   var s1 = document.createElement('script');
   s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   s1.onload = function() {
+    console.info('[LOAD] Three.js 코어 로드 완료');
     var s2 = document.createElement('script');
     s2.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-    s2.onload = function() { onReady(); };
+    s2.onload = function() { console.info('[LOAD] GLTFLoader 로드 완료'); onReady(); };
+    s2.onerror = function() { console.error('[LOAD] GLTFLoader 로드 실패 — CDN 접속 불가'); onReady(); };
     document.head.appendChild(s2);
   };
+  s1.onerror = function() { console.error('[LOAD] Three.js 로드 실패 — CDN 접속 불가'); onReady(); };
   document.head.appendChild(s1);
 }
 
 function setupScene() {
+  console.info('[SCENE] 3D 씬 생성 시작');
   var canvas = document.getElementById('c3d');
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -328,6 +445,7 @@ function setupScene() {
 
   window.addEventListener('resize', onResize);
   isSceneReady = true;
+  console.info('[SCENE] 3D 씬 생성 완료 — 애니메이션 시작');
   animate();
 }
 
@@ -556,8 +674,10 @@ function updateArms() {
 
 /* ═══════ RABBIT LOADER ═══════ */
 function loadRabbit() {
-  if (!THREE.GLTFLoader) return;
+  if (typeof THREE === 'undefined' || !THREE.GLTFLoader) { console.warn('[LOAD] GLTFLoader 없음 — 토끼 모델 스킵'); return; }
+  console.info('[LOAD] 토끼 모델 로딩 시작... (rabbit.glb)');
   new THREE.GLTFLoader().load('Models/rabbit.glb', function(gltf) {
+    console.info('[LOAD] 토끼 모델 로드 완료');
     if (!isSceneReady) return;
     rabbitModel = gltf.scene;
     rabbitModel.traverse(function(c) {
@@ -587,6 +707,8 @@ function loadRabbit() {
     rabbitBaseY = rabbitModel.position.y;
     rabbitModel.rotation.y = -0.3;
     scene.add(rabbitModel);
+  }, undefined, function(err) {
+    console.error('[LOAD] 토끼 모델 로드 실패:', err && err.message ? err.message : err);
   });
 }
 
@@ -846,10 +968,14 @@ function showOpts(opts) {
 
 /* ═══════ TAROT DATA ═══════ */
 function loadCards(cb) {
+  console.info('[LOAD] 카드 데이터 로딩... (major_arcana.json)');
   fetch('data/cards/major_arcana.json')
-    .then(function(r){return r.json();})
-    .then(function(d){cardData=d;cb();})
-    .catch(function(){cardData=[];cb();});
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.json();
+    })
+    .then(function(d){console.info('[LOAD] 카드 데이터 로드 완료 ('+d.length+'장)');cardData=d;cb();})
+    .catch(function(e){console.error('[LOAD] 카드 데이터 로드 실패:',e.message||e);cardData=[];cb();});
 }
 
 function drawCards(n) {
@@ -1184,14 +1310,40 @@ function createStars() {
 }
 
 /* ═══════ INIT ═══════ */
+function hideLoader() {
+  var loader = document.getElementById('loader');
+  if(loader && !loader.classList.contains('hidden')) {
+    loader.classList.add('hidden');
+    console.info('[INIT] 로더 숨김');
+  }
+}
+
 function init() {
+  console.info('[INIT] 초기화 시작');
   createStars();
+
+  // 안전장치: 15초 후에도 로딩 중이면 강제 진행
+  var _loadTimeout = setTimeout(function(){
+    console.warn('[INIT] 로딩 15초 초과 — 강제 진행');
+    hideLoader();
+    if(typeof startGame === 'function') startGame();
+  }, 15000);
+
   loadCards(function(){
+    console.info('[INIT] 카드 로드 콜백 → Three.js 로딩');
     initThree(function(){
-      setupScene();
+      console.info('[INIT] Three.js 콜백 → 씬 구성');
+      if(typeof THREE !== 'undefined') {
+        setupScene();
+        console.info('[INIT] 씬 구성 완료');
+      } else {
+        console.error('[INIT] THREE 객체 없음 — 3D 씬 생성 불가');
+      }
+      clearTimeout(_loadTimeout);
       setTimeout(function(){
-        document.getElementById('loader').classList.add('hidden');
+        hideLoader();
         startGame();
+        console.info('[INIT] 게임 시작!');
       }, 1200);
     });
   });
