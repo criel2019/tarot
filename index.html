@@ -652,8 +652,9 @@ function mkHand() {
   return g;
 }
 
-var _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3();
+var _v1, _v2;
 function posCyl(mesh, a, b) {
+  if(!_v1){ _v1 = new THREE.Vector3(); _v2 = new THREE.Vector3(); }
   _v1.addVectors(a, b).multiplyScalar(0.5); mesh.position.copy(_v1);
   _v2.subVectors(b, a); mesh.scale.y = _v2.length(); _v2.normalize();
   var q = new THREE.Quaternion(); q.setFromUnitVectors(new THREE.Vector3(0,1,0), _v2);
