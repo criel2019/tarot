@@ -1,0 +1,486 @@
+[
+  {
+    "id": "major_00",
+    "name_kr": "바보",
+    "name_en": "The Fool",
+    "number": 0,
+    "arcana": "major",
+    "attributes": { "element": "air", "planet": "Uranus" },
+    "keywords": {
+      "upright": ["새로운 시작", "자유", "순수함", "모험", "가능성"],
+      "reversed": ["무모함", "경솔함", "현실도피", "준비 부족", "혼돈"]
+    },
+    "core_meaning": {
+      "upright": "두려움 없이 새로운 여정을 시작할 때입니다. 순수한 마음으로 한 걸음을 내딛으세요.",
+      "reversed": "충분한 준비 없이 무작정 뛰어드는 것은 위험합니다. 현실을 직시하세요."
+    },
+    "situation_snippets": {
+      "love": "새로운 만남이 다가오고 있습니다. 마음을 열어보세요.",
+      "career": "새로운 도전이 기다립니다. 과감하게 시작해보세요.",
+      "finance": "예상치 못한 기회가 올 수 있습니다. 유연하게 대처하세요."
+    },
+    "combination_tags": ["시작", "전환점", "자유", "용기"]
+  },
+  {
+    "id": "major_01",
+    "name_kr": "마법사",
+    "name_en": "The Magician",
+    "number": 1,
+    "arcana": "major",
+    "attributes": { "element": "air", "planet": "Mercury" },
+    "keywords": {
+      "upright": ["창조력", "의지력", "기술", "집중", "실현"],
+      "reversed": ["속임수", "혼란", "재능 낭비", "미숙함", "조작"]
+    },
+    "core_meaning": {
+      "upright": "당신에게는 원하는 것을 만들어낼 힘이 있습니다. 자원을 활용하고 행동하세요.",
+      "reversed": "능력을 제대로 발휘하지 못하고 있습니다. 방향을 재점검하세요."
+    },
+    "situation_snippets": {
+      "love": "적극적으로 표현하면 관계가 발전합니다.",
+      "career": "당신의 역량을 발휘할 절호의 시기입니다.",
+      "finance": "현명한 투자와 관리로 성과를 낼 수 있습니다."
+    },
+    "combination_tags": ["실현", "능력", "행동", "창조"]
+  },
+  {
+    "id": "major_02",
+    "name_kr": "여사제",
+    "name_en": "The High Priestess",
+    "number": 2,
+    "arcana": "major",
+    "attributes": { "element": "water", "planet": "Moon" },
+    "keywords": {
+      "upright": ["직관", "지혜", "내면의 목소리", "비밀", "잠재력"],
+      "reversed": ["억압된 감정", "직관 무시", "혼란", "표면적 판단", "불안"]
+    },
+    "core_meaning": {
+      "upright": "내면의 목소리에 귀 기울일 때입니다. 직관이 진실을 알려줄 것입니다.",
+      "reversed": "직관을 무시하고 겉모습에만 집중하고 있습니다. 내면을 들여다보세요."
+    },
+    "situation_snippets": {
+      "love": "감정에 솔직해지면 답이 보입니다.",
+      "career": "서두르지 말고 상황을 관찰하세요.",
+      "finance": "직감을 따르되, 기본적인 확인은 필요합니다."
+    },
+    "combination_tags": ["직관", "내면", "비밀", "지혜"]
+  },
+  {
+    "id": "major_03",
+    "name_kr": "여황제",
+    "name_en": "The Empress",
+    "number": 3,
+    "arcana": "major",
+    "attributes": { "element": "earth", "planet": "Venus" },
+    "keywords": {
+      "upright": ["풍요", "모성", "자연", "창조", "아름다움"],
+      "reversed": ["의존", "과잉보호", "공허함", "불안정", "질투"]
+    },
+    "core_meaning": {
+      "upright": "풍요와 사랑이 당신을 감싸고 있습니다. 삶의 아름다움을 누리세요.",
+      "reversed": "지나친 집착이나 의존은 오히려 성장을 막습니다. 균형을 찾으세요."
+    },
+    "situation_snippets": {
+      "love": "따뜻한 감정이 꽃피는 시기입니다.",
+      "career": "창의적인 프로젝트가 결실을 맺습니다.",
+      "finance": "물질적 풍요가 찾아오고 있습니다."
+    },
+    "combination_tags": ["풍요", "사랑", "창조", "성장"]
+  },
+  {
+    "id": "major_04",
+    "name_kr": "황제",
+    "name_en": "The Emperor",
+    "number": 4,
+    "arcana": "major",
+    "attributes": { "element": "fire", "planet": "Aries" },
+    "keywords": {
+      "upright": ["권위", "구조", "리더십", "안정", "통제력"],
+      "reversed": ["독재", "경직", "미성숙", "과잉 통제", "무력감"]
+    },
+    "core_meaning": {
+      "upright": "체계를 세우고 단단한 기반을 만들 때입니다. 리더십을 발휘하세요.",
+      "reversed": "지나친 통제는 역효과를 낳습니다. 유연함을 배우세요."
+    },
+    "situation_snippets": {
+      "love": "안정적인 관계를 구축할 수 있는 시기입니다.",
+      "career": "리더십과 책임감으로 인정받을 수 있습니다.",
+      "finance": "체계적인 관리가 재정 안정을 가져옵니다."
+    },
+    "combination_tags": ["리더십", "안정", "구조", "권위"]
+  },
+  {
+    "id": "major_05",
+    "name_kr": "교황",
+    "name_en": "The Hierophant",
+    "number": 5,
+    "arcana": "major",
+    "attributes": { "element": "earth", "planet": "Taurus" },
+    "keywords": {
+      "upright": ["전통", "가르침", "신념", "제도", "영적 지혜"],
+      "reversed": ["독단", "형식주의", "억압", "반항", "교조적"]
+    },
+    "core_meaning": {
+      "upright": "검증된 지혜와 가르침 속에 답이 있습니다. 멘토를 찾아보세요.",
+      "reversed": "관습에 얽매이지 마세요. 자신만의 길을 찾을 때입니다."
+    },
+    "situation_snippets": {
+      "love": "서로의 가치관을 존중하는 것이 중요합니다.",
+      "career": "경험 많은 선배의 조언이 도움이 됩니다.",
+      "finance": "안전하고 검증된 방법으로 접근하세요."
+    },
+    "combination_tags": ["지혜", "전통", "가르침", "신념"]
+  },
+  {
+    "id": "major_06",
+    "name_kr": "연인",
+    "name_en": "The Lovers",
+    "number": 6,
+    "arcana": "major",
+    "attributes": { "element": "air", "planet": "Gemini" },
+    "keywords": {
+      "upright": ["사랑", "조화", "선택", "유대", "가치관"],
+      "reversed": ["갈등", "불화", "유혹", "회피", "불균형"]
+    },
+    "core_meaning": {
+      "upright": "중요한 선택의 순간입니다. 마음이 이끄는 방향을 따르세요.",
+      "reversed": "내면의 갈등이 관계를 흔들고 있습니다. 진심을 마주하세요."
+    },
+    "situation_snippets": {
+      "love": "깊은 유대감이 형성되는 시기입니다.",
+      "career": "중요한 선택 앞에 서 있습니다. 가치관에 따르세요.",
+      "finance": "파트너십이 재정적 이익을 가져올 수 있습니다."
+    },
+    "combination_tags": ["선택", "사랑", "조화", "관계"]
+  },
+  {
+    "id": "major_07",
+    "name_kr": "전차",
+    "name_en": "The Chariot",
+    "number": 7,
+    "arcana": "major",
+    "attributes": { "element": "water", "planet": "Cancer" },
+    "keywords": {
+      "upright": ["의지", "승리", "전진", "결단", "자신감"],
+      "reversed": ["방향 상실", "공격성", "좌절", "통제 불능", "무모한 질주"]
+    },
+    "core_meaning": {
+      "upright": "강한 의지로 앞으로 나아가세요. 승리가 가까이 있습니다.",
+      "reversed": "어디로 가고 있는지 점검하세요. 방향을 잃고 있을 수 있습니다."
+    },
+    "situation_snippets": {
+      "love": "적극적으로 다가가면 좋은 결과가 있습니다.",
+      "career": "목표를 향해 단호하게 전진하세요.",
+      "finance": "과감한 결단이 필요한 시기입니다."
+    },
+    "combination_tags": ["전진", "의지", "승리", "결단"]
+  },
+  {
+    "id": "major_08",
+    "name_kr": "힘",
+    "name_en": "Strength",
+    "number": 8,
+    "arcana": "major",
+    "attributes": { "element": "fire", "planet": "Leo" },
+    "keywords": {
+      "upright": ["용기", "인내", "자비", "내면의 힘", "극복"],
+      "reversed": ["자기 의심", "나약함", "분노", "강압", "두려움"]
+    },
+    "core_meaning": {
+      "upright": "부드러운 힘으로 어려움을 극복할 수 있습니다. 자신을 믿으세요.",
+      "reversed": "두려움에 휩쓸리지 마세요. 내면의 힘을 되찾을 때입니다."
+    },
+    "situation_snippets": {
+      "love": "인내와 이해로 관계가 더 깊어집니다.",
+      "career": "끈기 있게 밀고 나가면 성과가 나타납니다.",
+      "finance": "조급해하지 말고 꾸준히 노력하세요."
+    },
+    "combination_tags": ["용기", "인내", "극복", "내면"]
+  },
+  {
+    "id": "major_09",
+    "name_kr": "은둔자",
+    "name_en": "The Hermit",
+    "number": 9,
+    "arcana": "major",
+    "attributes": { "element": "earth", "planet": "Virgo" },
+    "keywords": {
+      "upright": ["성찰", "고독", "지혜", "탐구", "인도"],
+      "reversed": ["고립", "외로움", "편협", "거부", "방황"]
+    },
+    "core_meaning": {
+      "upright": "혼자만의 시간이 필요합니다. 내면을 탐구하며 답을 찾으세요.",
+      "reversed": "지나친 고립은 도움이 되지 않습니다. 세상과 다시 연결되세요."
+    },
+    "situation_snippets": {
+      "love": "혼자서 감정을 정리할 시간이 필요합니다.",
+      "career": "깊은 전문성을 쌓을 수 있는 시기입니다.",
+      "finance": "신중하게 분석하고 결정하세요."
+    },
+    "combination_tags": ["성찰", "지혜", "고독", "탐구"]
+  },
+  {
+    "id": "major_10",
+    "name_kr": "운명의 수레바퀴",
+    "name_en": "Wheel of Fortune",
+    "number": 10,
+    "arcana": "major",
+    "attributes": { "element": "fire", "planet": "Jupiter" },
+    "keywords": {
+      "upright": ["전환점", "운명", "기회", "순환", "행운"],
+      "reversed": ["저항", "정체", "불운", "반복", "통제 불능"]
+    },
+    "core_meaning": {
+      "upright": "변화의 바람이 불어옵니다. 흐름에 올라타면 행운이 따릅니다.",
+      "reversed": "같은 패턴이 반복되고 있습니다. 변화를 받아들이세요."
+    },
+    "situation_snippets": {
+      "love": "운명적인 만남이나 전환점이 올 수 있습니다.",
+      "career": "새로운 기회의 문이 열리고 있습니다.",
+      "finance": "재정적 전환점이 다가오고 있습니다."
+    },
+    "combination_tags": ["운명", "전환", "기회", "순환"]
+  },
+  {
+    "id": "major_11",
+    "name_kr": "정의",
+    "name_en": "Justice",
+    "number": 11,
+    "arcana": "major",
+    "attributes": { "element": "air", "planet": "Libra" },
+    "keywords": {
+      "upright": ["공정", "균형", "진실", "책임", "결과"],
+      "reversed": ["불공정", "편견", "회피", "불균형", "부정직"]
+    },
+    "core_meaning": {
+      "upright": "공정한 결과가 돌아옵니다. 진실되게 행동하면 보상을 받습니다.",
+      "reversed": "균형이 무너져 있습니다. 공정한 시각으로 상황을 재평가하세요."
+    },
+    "situation_snippets": {
+      "love": "서로에게 솔직하고 공정하게 대하세요.",
+      "career": "정당한 노력에 합당한 보상이 옵니다.",
+      "finance": "공정한 거래와 투명한 관리가 핵심입니다."
+    },
+    "combination_tags": ["공정", "균형", "진실", "책임"]
+  },
+  {
+    "id": "major_12",
+    "name_kr": "매달린 사람",
+    "name_en": "The Hanged Man",
+    "number": 12,
+    "arcana": "major",
+    "attributes": { "element": "water", "planet": "Neptune" },
+    "keywords": {
+      "upright": ["희생", "관점 전환", "인내", "내려놓음", "깨달음"],
+      "reversed": ["저항", "무의미한 희생", "이기심", "지연", "고착"]
+    },
+    "core_meaning": {
+      "upright": "멈추고 다른 관점으로 보세요. 내려놓을 때 새로운 깨달음이 옵니다.",
+      "reversed": "변화를 거부하며 같은 자리에 머물고 있습니다. 유연해지세요."
+    },
+    "situation_snippets": {
+      "love": "잠시 물러서서 관계를 객관적으로 바라보세요.",
+      "career": "지금은 기다림이 최선의 전략입니다.",
+      "finance": "당장의 이익보다 장기적 관점이 필요합니다."
+    },
+    "combination_tags": ["희생", "관점", "인내", "깨달음"]
+  },
+  {
+    "id": "major_13",
+    "name_kr": "죽음",
+    "name_en": "Death",
+    "number": 13,
+    "arcana": "major",
+    "attributes": { "element": "water", "planet": "Scorpio" },
+    "keywords": {
+      "upright": ["변화", "종결", "재탄생", "전환", "해방"],
+      "reversed": ["변화 저항", "정체", "두려움", "집착", "미련"]
+    },
+    "core_meaning": {
+      "upright": "하나의 장이 끝나고 새로운 시작이 옵니다. 과거를 보내주세요.",
+      "reversed": "끝내야 할 것을 붙잡고 있습니다. 놓아줄 용기가 필요합니다."
+    },
+    "situation_snippets": {
+      "love": "관계의 변화를 받아들이세요. 더 나은 모습으로 재탄생합니다.",
+      "career": "과감한 변화가 새로운 기회를 엽니다.",
+      "finance": "낡은 재정 습관을 버리고 새로운 접근이 필요합니다."
+    },
+    "combination_tags": ["변화", "종결", "재탄생", "해방"]
+  },
+  {
+    "id": "major_14",
+    "name_kr": "절제",
+    "name_en": "Temperance",
+    "number": 14,
+    "arcana": "major",
+    "attributes": { "element": "fire", "planet": "Sagittarius" },
+    "keywords": {
+      "upright": ["균형", "조화", "인내", "절제", "치유"],
+      "reversed": ["과잉", "불균형", "조급함", "극단", "낭비"]
+    },
+    "core_meaning": {
+      "upright": "균형과 조화를 유지하세요. 서두르지 않으면 모든 것이 제자리를 찾습니다.",
+      "reversed": "극단으로 치우치고 있습니다. 중심을 잡고 균형을 되찾으세요."
+    },
+    "situation_snippets": {
+      "love": "서로의 차이를 인정하고 조화를 이루세요.",
+      "career": "꾸준하고 균형 잡힌 접근이 성과를 냅니다.",
+      "finance": "수입과 지출의 균형을 맞추세요."
+    },
+    "combination_tags": ["균형", "조화", "인내", "치유"]
+  },
+  {
+    "id": "major_15",
+    "name_kr": "악마",
+    "name_en": "The Devil",
+    "number": 15,
+    "arcana": "major",
+    "attributes": { "element": "earth", "planet": "Capricorn" },
+    "keywords": {
+      "upright": ["유혹", "집착", "속박", "물질주의", "욕망"],
+      "reversed": ["해방", "자각", "극복", "독립", "속박 탈출"]
+    },
+    "core_meaning": {
+      "upright": "무언가에 얽매여 있지 않은지 돌아보세요. 집착의 사슬을 인식하는 것이 첫걸음입니다.",
+      "reversed": "속박에서 벗어나고 있습니다. 자유를 향한 첫걸음을 축하하세요."
+    },
+    "situation_snippets": {
+      "love": "건강하지 못한 관계 패턴을 점검하세요.",
+      "career": "과도한 야망이 균형을 깨뜨리고 있지 않은지 살피세요.",
+      "finance": "충동적인 소비나 물질적 집착을 경계하세요."
+    },
+    "combination_tags": ["속박", "유혹", "해방", "욕망"]
+  },
+  {
+    "id": "major_16",
+    "name_kr": "탑",
+    "name_en": "The Tower",
+    "number": 16,
+    "arcana": "major",
+    "attributes": { "element": "fire", "planet": "Mars" },
+    "keywords": {
+      "upright": ["파괴", "충격", "각성", "해방", "진실 드러남"],
+      "reversed": ["변화 저항", "두려움", "은폐", "지연된 붕괴", "거부"]
+    },
+    "core_meaning": {
+      "upright": "갑작스러운 변화가 찾아옵니다. 무너진 자리에서 더 단단한 것을 세울 수 있습니다.",
+      "reversed": "필연적인 변화를 피하려 하고 있습니다. 진실을 마주할 용기를 내세요."
+    },
+    "situation_snippets": {
+      "love": "충격적인 변화가 오히려 관계를 정화합니다.",
+      "career": "예상치 못한 전환이 새로운 길을 열어줍니다.",
+      "finance": "재정적 충격에 대비하되, 재건의 기회로 삼으세요."
+    },
+    "combination_tags": ["파괴", "충격", "각성", "재건"]
+  },
+  {
+    "id": "major_17",
+    "name_kr": "별",
+    "name_en": "The Star",
+    "number": 17,
+    "arcana": "major",
+    "attributes": { "element": "air", "planet": "Aquarius" },
+    "keywords": {
+      "upright": ["희망", "영감", "치유", "평화", "재생"],
+      "reversed": ["절망", "불신", "단절", "무기력", "환멸"]
+    },
+    "core_meaning": {
+      "upright": "어둠 뒤에 빛이 옵니다. 희망을 놓지 마세요, 치유가 시작되고 있습니다.",
+      "reversed": "희망을 잃고 있다면 잠시 쉬어가세요. 빛은 반드시 다시 찾아옵니다."
+    },
+    "situation_snippets": {
+      "love": "상처가 치유되고 새로운 사랑이 싹틉니다.",
+      "career": "영감이 넘치는 시기입니다. 꿈을 향해 나아가세요.",
+      "finance": "조금씩 나아지고 있습니다. 희망을 가지세요."
+    },
+    "combination_tags": ["희망", "치유", "영감", "재생"]
+  },
+  {
+    "id": "major_18",
+    "name_kr": "달",
+    "name_en": "The Moon",
+    "number": 18,
+    "arcana": "major",
+    "attributes": { "element": "water", "planet": "Pisces" },
+    "keywords": {
+      "upright": ["환상", "직관", "불안", "무의식", "꿈"],
+      "reversed": ["혼란 해소", "기만 발각", "두려움 극복", "착각", "진실 직면"]
+    },
+    "core_meaning": {
+      "upright": "보이는 것이 전부가 아닙니다. 직관을 믿되, 환상에 빠지지 마세요.",
+      "reversed": "혼란이 걷히고 있습니다. 진실이 서서히 드러나고 있습니다."
+    },
+    "situation_snippets": {
+      "love": "감정의 안개 속에서 진심을 구별하세요.",
+      "career": "불확실한 상황에서 직감을 따르되 검증하세요.",
+      "finance": "겉보기에 좋은 기회도 신중하게 확인하세요."
+    },
+    "combination_tags": ["환상", "직관", "불안", "무의식"]
+  },
+  {
+    "id": "major_19",
+    "name_kr": "태양",
+    "name_en": "The Sun",
+    "number": 19,
+    "arcana": "major",
+    "attributes": { "element": "fire", "planet": "Sun" },
+    "keywords": {
+      "upright": ["기쁨", "성공", "활력", "낙관", "자신감"],
+      "reversed": ["과시", "허영", "소진", "지연", "비현실적 기대"]
+    },
+    "core_meaning": {
+      "upright": "밝은 에너지가 가득합니다. 자신감을 갖고 앞으로 나아가세요.",
+      "reversed": "겉으로는 밝아 보이지만 내면이 지쳐 있지 않은지 살피세요."
+    },
+    "situation_snippets": {
+      "love": "행복하고 따뜻한 에너지가 관계를 비춥니다.",
+      "career": "성과와 인정을 받는 시기입니다.",
+      "finance": "재정적 호황기입니다. 감사하며 누리세요."
+    },
+    "combination_tags": ["기쁨", "성공", "활력", "자신감"]
+  },
+  {
+    "id": "major_20",
+    "name_kr": "심판",
+    "name_en": "Judgement",
+    "number": 20,
+    "arcana": "major",
+    "attributes": { "element": "fire", "planet": "Pluto" },
+    "keywords": {
+      "upright": ["재평가", "부활", "결단", "소명", "깨달음"],
+      "reversed": ["후회", "자기비판", "우유부단", "거부", "자기부정"]
+    },
+    "core_meaning": {
+      "upright": "과거를 돌아보고 새로운 결단을 내릴 때입니다. 내면의 부름에 응답하세요.",
+      "reversed": "자기 비판에 갇혀 있지 마세요. 과거를 용서하고 앞으로 나아가세요."
+    },
+    "situation_snippets": {
+      "love": "과거의 관계를 돌아보고 교훈을 얻으세요.",
+      "career": "커리어의 방향을 재점검할 시기입니다.",
+      "finance": "재정 습관을 재평가하고 새 출발하세요."
+    },
+    "combination_tags": ["재평가", "부활", "결단", "소명"]
+  },
+  {
+    "id": "major_21",
+    "name_kr": "세계",
+    "name_en": "The World",
+    "number": 21,
+    "arcana": "major",
+    "attributes": { "element": "earth", "planet": "Saturn" },
+    "keywords": {
+      "upright": ["완성", "성취", "통합", "여행", "충만"],
+      "reversed": ["미완성", "지연", "공허함", "미련", "정체"]
+    },
+    "core_meaning": {
+      "upright": "하나의 여정이 아름답게 완성됩니다. 성취를 축하하고 다음 여정을 준비하세요.",
+      "reversed": "마무리하지 못한 과제가 남아 있습니다. 완성을 향해 마지막 한 걸음을 내딛으세요."
+    },
+    "situation_snippets": {
+      "love": "관계가 성숙한 단계에 이르렀습니다.",
+      "career": "목표 달성과 성취감을 맛보는 시기입니다.",
+      "finance": "재정적 안정과 풍요가 완성됩니다."
+    },
+    "combination_tags": ["완성", "성취", "통합", "충만"]
+  }
+]

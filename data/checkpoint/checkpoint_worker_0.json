@@ -1,0 +1,15 @@
+{
+  "worker_id": 0,
+  "completed": [],
+  "failed": [
+    "major_00_major_18_major_15_ur",
+    "major_08_major_05_major_03_ur",
+    "major_14_major_20_major_11_ur"
+  ],
+  "stats": {
+    "total_generated": 0,
+    "total_calls": 0,
+    "quality_pass": 0,
+    "quality_fail": 0
+  }
+}
