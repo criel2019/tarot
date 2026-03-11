@@ -152,6 +152,21 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .reading-summary{background:rgba(123,110,240,.08);border:1px solid rgba(123,110,240,.15);border-radius:12px;padding:1.2rem;margin-top:1rem}
 .reading-summary-title{font-family:'Cinzel',serif;font-size:.8rem;color:var(--purple);letter-spacing:.15em;margin-bottom:.6rem}
 
+/* ===== CHARACTER SELECT ===== */
+#charSelect{position:fixed;inset:0;z-index:90;display:flex;align-items:center;justify-content:center;background:rgba(6,3,15,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity .6s}
+#charSelect.show{opacity:1;pointer-events:auto}
+.char-select-inner{text-align:center;max-width:480px;padding:2rem}
+.char-select-title{font-family:'Cinzel',serif;font-size:clamp(.85rem,2.5vw,1.1rem);color:var(--gold);letter-spacing:.3em;margin-bottom:.5rem}
+.char-select-sub{font-family:'Noto Serif KR',serif;font-size:.85rem;color:var(--text-2);margin-bottom:2rem;font-weight:300}
+.char-select-options{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap}
+.char-sel-btn{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.5rem 1.8rem;cursor:pointer;transition:all .35s;text-align:center;min-width:140px;position:relative;overflow:hidden}
+.char-sel-btn::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 80%,rgba(201,168,76,.06),transparent 70%);pointer-events:none}
+.char-sel-btn:hover{border-color:var(--gold);box-shadow:0 0 24px rgba(201,168,76,.15);transform:translateY(-4px)}
+.char-sel-btn:active{transform:scale(.97)}
+.char-sel-emoji{font-size:2.8rem;display:block;margin-bottom:.6rem}
+.char-sel-name{font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold);letter-spacing:.1em}
+.char-sel-desc{font-size:.72rem;color:var(--text-2);margin-top:.3rem;line-height:1.4}
+
 /* ===== RESTART ===== */
 #restartBtn{position:fixed;bottom:1.5rem;right:1.5rem;z-index:80;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem 1.2rem;color:var(--text-2);font-size:.8rem;cursor:pointer;opacity:0;transition:all .3s;pointer-events:none;font-family:'Noto Sans KR',sans-serif}
 #restartBtn.show{opacity:1;pointer-events:auto}
@@ -193,6 +208,25 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 </div>
 
 <div id="hud"><div class="hud-title">✦ Starlight Tarot ✦</div></div>
+
+<div id="charSelect">
+  <div class="char-select-inner">
+    <div class="char-select-title">✦ CHOOSE YOUR GUIDE ✦</div>
+    <div class="char-select-sub">오늘 밤, 누가 당신의 운명을 읽어드릴까요?</div>
+    <div class="char-select-options">
+      <div class="char-sel-btn" onclick="selectChar('bt')">
+        <span class="char-sel-emoji">🤵</span>
+        <div class="char-sel-name">바텐더</div>
+        <div class="char-sel-desc">신비롭고 차분한 안내인</div>
+      </div>
+      <div class="char-sel-btn" onclick="selectChar('rb')">
+        <span class="char-sel-emoji">🐰</span>
+        <div class="char-sel-name">루나</div>
+        <div class="char-sel-desc">밝고 귀여운 타로 조수</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="dialogue">
   <div class="dlg-box" id="dlgBox">
@@ -332,6 +366,9 @@ var btShoulderL, btShoulderR;
 
 // Rabbit
 var rabbitModel = null, rabbitBaseY = 0, rabbitScale = 1;
+
+// Character selection: 'bt' or 'rb'
+var selectedChar = null;
 
 // Scene objects
 var crystalBall, candleFlames = [], bokehParticles = [];
@@ -895,6 +932,8 @@ function initDlgRefs() {
 }
 
 function say(ch, text, opts) {
+  // Skip lines from non-selected character
+  if (selectedChar && ch !== selectedChar) return;
   opts = opts || {};
   dlgQueue.push({ ch:ch, text:text, pause:opts.pause||0, onDone:opts.onDone||null, anim:opts.anim||null });
   if (!dlgTyping && dlgQueue.length===1) processMsg();
@@ -1080,8 +1119,8 @@ function toRoman(n){
 function startReading() {
   hideDlg();
   $cardArea.classList.remove('show');
-  say('bt','자, 카드가 모두 나왔으니... 이야기를 시작하겠습니다.',{anim:'thinking'});
-  say('rb','두근두근...!!');
+  if (selectedChar==='bt') say('bt','자, 카드가 모두 나왔으니... 이야기를 시작하겠습니다.',{anim:'thinking'});
+  else say('rb','우와~!! 카드가 다 나왔어!! 두근두근...!! 뭐라고 써있을까?!',{anim:'excited'});
   dlgCallback = function(){ setTimeout(showReadingPanel, 500); };
 }
 
@@ -1109,20 +1148,31 @@ function showReadingPanel() {
 
     var interp = document.createElement('div'); interp.className='reading-interp';
 
+    var charIcon = selectedChar==='rb' ? '🐰 루나' : '🤵 바텐더';
+    var charClass = selectedChar==='rb' ? 'rb-label' : 'bt-label';
+
     var core = card.isReversed ? card.core_meaning.reversed : card.core_meaning.upright;
     var p1 = document.createElement('p');
-    p1.innerHTML='<span class="char-label bt-label">🤵 바텐더:</span> "'+core+'"';
+    p1.innerHTML='<span class="char-label '+charClass+'">'+charIcon+':</span> "'+core+'"';
     interp.appendChild(p1);
 
     var tk = topicKey();
     if(card.situation_snippets && card.situation_snippets[tk]){
       var p2 = document.createElement('p');
-      p2.innerHTML='<span class="char-label bt-label">🤵 바텐더:</span> "'+card.situation_snippets[tk]+'"';
+      p2.innerHTML='<span class="char-label '+charClass+'">'+charIcon+':</span> "'+card.situation_snippets[tk]+'"';
       interp.appendChild(p2);
     }
 
     var p3 = document.createElement('p');
-    p3.innerHTML='<span class="char-label rb-label">🐰 루나:</span> "'+lunaReact(card)+'"';
+    if (selectedChar==='rb') {
+      p3.innerHTML='<span class="char-label rb-label">🐰 루나:</span> "'+lunaReact(card)+'"';
+    } else {
+      // Bartender gets a more analytical reaction instead of Luna's
+      var btReact = card.isReversed
+        ? '역위치가 나왔군요... 이것은 경고가 아니라, 다른 각도에서 바라보라는 의미입니다.'
+        : '좋은 기운이 느껴집니다. 이 카드의 메시지를 마음에 담아두세요.';
+      p3.innerHTML='<span class="char-label bt-label">🤵 바텐더:</span> "'+btReact+'"';
+    }
     interp.appendChild(p3);
 
     var kws = card.isReversed ? card.keywords.reversed : card.keywords.upright;
@@ -1137,10 +1187,15 @@ function showReadingPanel() {
 
   // Summary
   var sum = document.createElement('div'); sum.className='reading-summary';
-  sum.innerHTML =
-    '<div class="reading-summary-title">✦ FINAL MESSAGE ✦</div>'+
-    '<p class="reading-interp"><span class="char-label bt-label">🤵 바텐더:</span> "'+finalBt()+'"</p>'+
-    '<p class="reading-interp" style="margin-top:.5rem"><span class="char-label rb-label">🐰 루나:</span> "'+finalRb()+'"</p>';
+  if (selectedChar==='rb') {
+    sum.innerHTML =
+      '<div class="reading-summary-title">✦ FINAL MESSAGE ✦</div>'+
+      '<p class="reading-interp"><span class="char-label rb-label">🐰 루나:</span> "'+finalRb()+'"</p>';
+  } else {
+    sum.innerHTML =
+      '<div class="reading-summary-title">✦ FINAL MESSAGE ✦</div>'+
+      '<p class="reading-interp"><span class="char-label bt-label">🤵 바텐더:</span> "'+finalBt()+'"</p>';
+  }
   cont.appendChild(sum);
 
   panel.classList.add('show');
@@ -1182,18 +1237,56 @@ function playIntro() {
   setTimeout(function(){
     document.getElementById('intro').style.display='none';
     document.getElementById('hud').classList.add('show');
-    phaseGreeting();
+    document.getElementById('charSelect').classList.add('show');
   }, 4800);
 }
 
+function selectChar(ch) {
+  selectedChar = ch;
+  document.getElementById('charSelect').classList.remove('show');
+
+  // Toggle 3D model visibility
+  if (ch === 'bt') {
+    if (rabbitModel) rabbitModel.visible = false;
+    if (btGroup) btGroup.visible = true;
+    if (btArmUpperL) btArmUpperL.visible = true;
+    if (btArmLowerL) btArmLowerL.visible = true;
+    if (btArmUpperR) btArmUpperR.visible = true;
+    if (btArmLowerR) btArmLowerR.visible = true;
+    if (btHandL) btHandL.visible = true;
+    if (btHandR) btHandR.visible = true;
+  } else {
+    if (btGroup) btGroup.visible = false;
+    if (btArmUpperL) btArmUpperL.visible = false;
+    if (btArmLowerL) btArmLowerL.visible = false;
+    if (btArmUpperR) btArmUpperR.visible = false;
+    if (btArmLowerR) btArmLowerR.visible = false;
+    if (btHandL) btHandL.visible = false;
+    if (btHandR) btHandR.visible = false;
+    if (rabbitModel) rabbitModel.visible = true;
+  }
+
+  // Shift camera to center on selected character
+  if (camera) {
+    var lookX = (ch === 'bt') ? -0.3 : 0.25;
+    camera.position.set(lookX, 2.2, 3.0);
+    camera.lookAt(lookX, 0.9, -0.2);
+  }
+
+  setTimeout(phaseGreeting, 400);
+}
+
 function phaseGreeting() {
-  say('bt','...어서 오세요.',{pause:500});
-  say('bt','이 밤, 별빛의 인도를 받아 이곳까지 오셨군요.');
-  say('rb','!! 손님이다!! 안녕안녕~!!',{anim:'excited'});
-  say('bt','후후... 이 아이는 제 조수 루나입니다. 소란스럽지만, 눈은 정확하지요.');
-  say('rb','헤헤~ 난 루나! 타로 보는 거 진짜진짜 좋아해!!');
-  say('bt','저는 이곳의 안내인... 밤의 바텐더라고 불러주시면 됩니다.');
-  say('bt','자... 오늘 이 늦은 밤에 찾아오신 건, 분명 이유가 있으시겠지요?');
+  if (selectedChar === 'bt') {
+    say('bt','...어서 오세요.',{pause:500});
+    say('bt','이 밤, 별빛의 인도를 받아 이곳까지 오셨군요.');
+    say('bt','저는 이곳의 안내인... 밤의 바텐더라고 불러주시면 됩니다.');
+    say('bt','자... 오늘 이 늦은 밤에 찾아오신 건, 분명 이유가 있으시겠지요?');
+  } else {
+    say('rb','!! 손님이다!! 안녕안녕~!!',{anim:'excited',pause:500});
+    say('rb','헤헤~ 난 루나! 타로 보는 거 진짜진짜 좋아해!!');
+    say('rb','오늘 밤에 여기까지 와주다니~! 뭔가 궁금한 게 있지?!');
+  }
   dlgCallback = function(){
     showOpts([
       {text:'💭 네, 요즘 고민이 좀 있어서요...', action:respA},
@@ -1204,24 +1297,34 @@ function phaseGreeting() {
 }
 
 function respA(){
-  say('bt','고민이라... 이곳을 찾아오신 것만으로도 이미 첫 걸음을 떼신 겁니다.');
-  say('rb','걱정 마! 카드가 길을 알려줄 거야!',{anim:'excited'});
+  if (selectedChar==='bt') {
+    say('bt','고민이라... 이곳을 찾아오신 것만으로도 이미 첫 걸음을 떼신 겁니다.');
+  } else {
+    say('rb','걱정 마! 카드가 길을 알려줄 거야! 루나가 도와줄게!!',{anim:'excited'});
+  }
   dlgCallback=phaseTopic;
 }
 function respB(){
-  say('bt','후후, 재미라 하셨지만... 카드는 종종 진심을 읽어내곤 하죠.');
-  say('rb','맞아맞아! 재미로 왔다가 깜짝 놀라는 사람 엄청 많아!',{anim:'excited'});
+  if (selectedChar==='bt') {
+    say('bt','후후, 재미라 하셨지만... 카드는 종종 진심을 읽어내곤 하죠.');
+  } else {
+    say('rb','맞아맞아! 재미로 왔다가 깜짝 놀라는 사람 엄청 많아!',{anim:'excited'});
+  }
   dlgCallback=phaseTopic;
 }
 function respC(){
-  say('bt','흥미로운 질문이시군요.',{anim:'thinking'});
-  say('bt','타로는 미래를 \'예언\'하지 않습니다. 다만... 마음 속 이미 알고 있는 답을 비추어 보여줄 뿐이지요.');
-  say('rb','어려운 건 모르겠고... 난 카드가 신기해서 좋아!');
+  if (selectedChar==='bt') {
+    say('bt','흥미로운 질문이시군요.',{anim:'thinking'});
+    say('bt','타로는 미래를 \'예언\'하지 않습니다. 다만... 마음 속 이미 알고 있는 답을 비추어 보여줄 뿐이지요.');
+  } else {
+    say('rb','음... 어려운 건 모르겠지만! 카드는 신기하게도 딱 맞는 걸 보여줘! 해보면 알 거야!');
+  }
   dlgCallback=phaseTopic;
 }
 
 function phaseTopic() {
-  say('bt','그렇다면... 오늘은 어떤 이야기를 나눠볼까요?');
+  if (selectedChar==='bt') say('bt','그렇다면... 오늘은 어떤 이야기를 나눠볼까요?');
+  else say('rb','자~ 뭐가 궁금한 거야? 골라골라~!');
   dlgCallback = function(){
     hideDlg();
     $topicSel.innerHTML='';
@@ -1243,15 +1346,18 @@ function phaseTopic() {
 }
 
 function onTopicPicked(t) {
-  var rr={love:'연애!! 두근두근하는 거~!!',career:'직업!! 열심히 일하는 거!!',finance:'돈돈!! 부자 되는 거!!',today:'오늘 운세!! 궁금궁금!!',general:'종합!! 다 알 수 있어!!'};
-  say('rb', rr[t.id]||'좋아좋아!!', {anim:'excited'});
-  say('bt', '...'+t.label+'이시군요. 좋습니다.');
+  if (selectedChar==='bt') {
+    say('bt', '...'+t.label+'이시군요. 좋습니다.');
+  } else {
+    var rr={love:'연애!! 두근두근하는 거~!!',career:'직업!! 열심히 일하는 거!!',finance:'돈돈!! 부자 되는 거!!',today:'오늘 운세!! 궁금궁금!!',general:'종합!! 다 알 수 있어!!'};
+    say('rb', rr[t.id]||'좋아좋아!!', {anim:'excited'});
+  }
   dlgCallback=phaseSpread;
 }
 
 function phaseSpread() {
-  say('bt','카드를 몇 장 뽑으시겠습니까?');
-  say('rb','한 장은 핵심만 딱! 세 장이면 과거-현재-미래! 나는 세 장이 좋아~!');
+  if (selectedChar==='bt') say('bt','카드를 몇 장 뽑으시겠습니까?');
+  else say('rb','카드 몇 장 뽑을 거야? 한 장은 핵심만 딱! 세 장이면 과거-현재-미래! 나는 세 장이 좋아~!');
   dlgCallback=function(){
     hideDlg();
     $spreadSel.innerHTML='';
@@ -1270,9 +1376,12 @@ function phaseSpread() {
 }
 
 function onSpreadPicked() {
-  say('bt','좋습니다. 마음을 가라앉히시고...',{anim:'thinking',pause:300});
-  say('bt','카드를 선택해 주세요. 끌리는 카드를 눌러 뒤집으시면 됩니다.');
-  say('rb','집중집중~!! 좋은 카드가 나올 거야!!');
+  if (selectedChar==='bt') {
+    say('bt','좋습니다. 마음을 가라앉히시고...',{anim:'thinking',pause:300});
+    say('bt','카드를 선택해 주세요. 끌리는 카드를 눌러 뒤집으시면 됩니다.');
+  } else {
+    say('rb','자~ 집중집중~!! 끌리는 카드를 눌러봐!! 좋은 카드가 나올 거야!!',{anim:'excited'});
+  }
   dlgCallback=function(){
     hideDlg();
     flippedCount=0;
@@ -1289,11 +1398,8 @@ function resetGame() {
   hideDlg();
   drawnCards=[]; flippedCount=0; selectedTopic=''; selectedSpread=1;
   btAnimState='idle'; rbAnimState='idle';
-  setTimeout(function(){
-    say('bt','다시 오셨군요... 환영합니다.');
-    say('rb','또 왔다~!! 이번엔 어떤 카드가 나올까?!',{anim:'excited'});
-    dlgCallback=phaseTopic;
-  },500);
+  // Show character select again
+  document.getElementById('charSelect').classList.add('show');
 }
 
 /* ═══════ STARS ═══════ */
