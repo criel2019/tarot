@@ -2,974 +2,1205 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>타로 — 신탁의 시간</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>별빛 타로 — 운명의 안내소</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#04040d;
-  --surface:#0e0e20;
-  --card-bg:#131328;
-  --border:#1e1e40;
-  --gold:#c9a84c;
-  --gold-hi:#e8c96d;
-  --gold-lo:#7a6230;
-  --gold-glow:rgba(201,168,76,.22);
-  --silver:#8a8ab0;
-  --purple:#7b6ef0;
-  --text:#e4e0d8;
-  --text-2:#9090b8;
-  --text-3:#4a4a72;
-  --rev:#cf6655;
+  --bg:#06030f;--surface:rgba(16,10,32,.92);--border:rgba(201,168,76,.25);
+  --gold:#c9a84c;--gold-hi:#e8c96d;--gold-lo:#7a6230;
+  --purple:#7b6ef0;--purple-lo:#3d2a7a;--indigo:#1a1040;
+  --text:#e8e4dc;--text-2:#a8a0c0;--text-3:#5a5080;
+  --red-soft:#cf6655;--green-soft:#5ecf65;
 }
 html{scroll-behavior:smooth}
-body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow:hidden;user-select:none;-webkit-user-select:none}
 
-/* canvas bg */
-#cvs{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.55}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 15% 10%,rgba(80,65,200,.1) 0%,transparent 60%),radial-gradient(ellipse 60% 50% at 85% 85%,rgba(201,168,76,.06) 0%,transparent 55%);pointer-events:none;z-index:0}
-
-/* layout */
-.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 1.5rem 6rem}
-
-/* header */
-.hdr{text-align:center;padding:3rem 1rem 1.5rem;position:relative;z-index:1}
-.hdr-eyebrow{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.45em;color:var(--gold-lo);text-transform:uppercase;margin-bottom:.8rem}
-.hdr-title{font-family:'Cinzel',serif;font-size:clamp(1.7rem,4vw,2.6rem);font-weight:400;letter-spacing:.22em;color:var(--gold);text-shadow:0 0 50px rgba(201,168,76,.35)}
-.hdr-line{width:100px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-lo),transparent);margin:1rem auto 0}
-
-/* ── PHASE 0: 주제 선택 ─────────────────── */
-#p0{animation:fadeUp .7s ease both}
-.p-lead{font-family:'Noto Serif KR',serif;font-size:1rem;font-weight:300;color:var(--silver);text-align:center;margin-bottom:2.5rem;letter-spacing:.04em}
-
-.topic-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:1.8rem}
-.topic-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.6rem 1.2rem;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);color:var(--text);text-align:center;position:relative;overflow:hidden}
-.topic-btn::after{content:'';position:absolute;inset:0;opacity:0;transition:opacity .35s;border-radius:13px}
-.topic-btn[data-t=love]::after   {background:radial-gradient(ellipse at center,rgba(207,102,85,.15),transparent 70%)}
-.topic-btn[data-t=career]::after {background:radial-gradient(ellipse at center,rgba(201,168,76,.13),transparent 70%)}
-.topic-btn[data-t=finance]::after{background:radial-gradient(ellipse at center,rgba(90,160,66,.12),transparent 70%)}
-.topic-btn[data-t=general]::after{background:radial-gradient(ellipse at center,rgba(123,110,240,.15),transparent 70%)}
-.topic-btn:hover::after,.topic-btn.on::after{opacity:1}
-.topic-btn:hover,.topic-btn.on{border-color:var(--gold-lo);transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,.45),0 0 0 1px rgba(201,168,76,.12)}
-.topic-btn.on{border-color:var(--gold);box-shadow:0 8px 30px rgba(0,0,0,.5),0 0 20px var(--gold-glow)}
-.topic-icon{font-size:1.9rem;margin-bottom:.55rem;display:block;position:relative;z-index:1}
-.topic-btn[data-t=love]   .topic-icon{color:#e88}
-.topic-btn[data-t=career] .topic-icon{color:var(--gold)}
-.topic-btn[data-t=finance].topic-icon{color:#7c4}
-.topic-btn[data-t=general].topic-icon{color:var(--purple)}
-.topic-name{font-family:'Noto Serif KR',serif;font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:.25rem;position:relative;z-index:1}
-.topic-desc{font-size:.72rem;color:var(--text-2);position:relative;z-index:1}
-
-.cq-wrap{margin-bottom:1.8rem}
-.cq-wrap label{display:block;font-size:.72rem;color:var(--text-3);letter-spacing:.1em;margin-bottom:.5rem}
-.cq-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.8rem 1.2rem;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:.9rem;outline:none;transition:border-color .3s,box-shadow .3s}
-.cq-input::placeholder{color:var(--text-3)}
-.cq-input:focus{border-color:var(--gold-lo);box-shadow:0 0 0 3px rgba(201,168,76,.07)}
-
-.spread-sect{margin-bottom:2.5rem}
-.spread-sect label{display:block;font-size:.72rem;color:var(--text-3);letter-spacing:.1em;margin-bottom:.7rem}
-.spread-tabs{display:flex;gap:.6rem}
-.spread-tab{flex:1;padding:.9rem 1rem;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text-2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:.85rem;transition:all .3s;text-align:center}
-.spread-tab:hover{border-color:var(--gold-lo);color:var(--text)}
-.spread-tab.on{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.06);box-shadow:0 0 15px rgba(201,168,76,.1)}
-.spread-tab .tt{font-weight:500;margin-bottom:.2rem}
-.spread-tab .ts{font-size:.7rem;color:var(--text-3)}
-.spread-tab.on .ts{color:var(--gold-lo)}
-
-.start-btn{display:block;width:100%;max-width:360px;margin:0 auto;padding:1rem 2rem;background:linear-gradient(135deg,#c9a84c,#a07828);border:none;border-radius:50px;color:#06040a;font-family:'Cinzel',serif;font-size:.9rem;font-weight:700;letter-spacing:.18em;cursor:pointer;transition:all .35s;box-shadow:0 4px 22px rgba(201,168,76,.28)}
-.start-btn:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(201,168,76,.45);background:linear-gradient(135deg,#e8c96d,#c9a84c)}
-
-/* ── PHASE 1: 카드 선택 ──────────────────── */
-#p1{display:none;animation:fadeUp .6s ease both}
-.back-btn{display:inline-flex;align-items:center;gap:.4rem;background:none;border:none;color:var(--text-2);font-size:.78rem;cursor:pointer;padding:.4rem 0;margin-bottom:1.5rem;transition:color .2s;font-family:'Noto Sans KR',sans-serif}
-.back-btn:hover{color:var(--gold)}
-.sel-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.6rem}
-.sel-hdr-l h2{font-family:'Noto Serif KR',serif;font-size:1.1rem;font-weight:400;color:var(--text);margin-bottom:.2rem}
-.sel-hdr-l p{font-size:.76rem;color:var(--text-2)}
-.t-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(201,168,76,.07);border:1px solid var(--gold-lo);border-radius:20px;padding:.32rem .9rem;font-size:.75rem;color:var(--gold)}
-
-/* preview slots */
-.preview{display:flex;justify-content:center;gap:.9rem;margin-bottom:1.8rem;flex-wrap:wrap}
-.slot{background:var(--surface);border:1px dashed var(--border);border-radius:10px;padding:.55rem 1.1rem;min-width:100px;text-align:center;transition:all .3s}
-.slot .sl{font-size:.62rem;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.25rem}
-.slot .sn{font-family:'Noto Serif KR',serif;font-size:.88rem;color:var(--gold);font-weight:600}
-.slot .so{font-size:.62rem;margin-top:.18rem;min-height:.85rem}
-.slot.filled{border-style:solid;border-color:var(--gold-lo)}
-.ori-u{color:var(--gold-lo)}
-.ori-r{color:var(--rev)}
-
-/* card grid */
-.card-grid{display:grid;grid-template-columns:repeat(11,1fr);gap:5px;margin-bottom:1.5rem}
-.tc{aspect-ratio:2/3;border-radius:6px;overflow:hidden;border:1px solid #1c1c40;cursor:pointer;transition:all .25s;background:linear-gradient(155deg,#141430,#0d0d22);position:relative}
-.tc::before{content:'';position:absolute;inset:3px;border:1px solid #222248;border-radius:3px;background:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(35,35,75,.25) 4px,rgba(35,35,75,.25) 5px),repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(35,35,75,.25) 4px,rgba(35,35,75,.25) 5px);pointer-events:none}
-.tc::after{content:attr(data-ord);position:absolute;top:3px;right:3px;background:var(--gold);color:#06040a;width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;z-index:2}
-.tc.sel::after{display:flex}
-.tc-rom{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-family:'Cinzel',serif;font-size:.52rem;color:var(--text-3);pointer-events:none}
-.tc:hover{border-color:var(--gold-lo);transform:translateY(-4px) scale(1.06);box-shadow:0 6px 20px rgba(0,0,0,.65),0 0 10px rgba(201,168,76,.1);z-index:2}
-.tc.sel{border-color:var(--gold);box-shadow:0 0 18px rgba(201,168,76,.35);background:linear-gradient(155deg,#201d46,#18153a)}
-.tc.dis{opacity:.2;pointer-events:none;filter:grayscale(.5)}
-
-.read-btn{display:none;margin:0 auto;padding:.85rem 2.8rem;background:linear-gradient(135deg,var(--gold),#a07828);color:#06040a;border:none;border-radius:50px;font-family:'Cinzel',serif;font-size:.88rem;font-weight:700;letter-spacing:.14em;cursor:pointer;transition:all .3s;box-shadow:0 4px 20px rgba(201,168,76,.28)}
-.read-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(201,168,76,.5)}
-.read-btn.vis{display:block}
-
-/* ── PHASE 2: 리딩 결과 ──────────────────── */
-#p2{display:none;animation:fadeUp .8s ease both}
-#p2.on{display:block}
-.r-hdr{text-align:center;margin-bottom:2.5rem}
-.r-sub{font-size:.68rem;color:var(--text-3);letter-spacing:.18em;text-transform:uppercase;margin-bottom:.45rem;font-family:'Cinzel',serif}
-.r-topic{font-family:'Noto Serif KR',serif;font-size:1rem;color:var(--gold)}
-
-/* synthesis box */
-.syn-box{background:linear-gradient(135deg,rgba(80,65,200,.09),rgba(201,168,76,.06));border:1px solid rgba(201,168,76,.18);border-radius:16px;padding:1.8rem 2rem;margin-bottom:2.5rem;position:relative}
-.syn-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold-lo),transparent)}
-.syn-label{font-family:'Cinzel',serif;font-size:.6rem;letter-spacing:.28em;color:var(--gold-lo);text-transform:uppercase;margin-bottom:.8rem}
-.syn-text{font-family:'Noto Serif KR',serif;font-size:1rem;line-height:1.9;color:var(--text);font-weight:300}
-.syn-text em{font-style:normal;color:var(--gold-hi);font-weight:600}
-
-/* spread */
-.spread{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-bottom:2rem}
-.spread.s1{grid-template-columns:minmax(0,400px);justify-content:center}
-
-/* flip card */
-.fc{perspective:1400px;min-height:440px}
-.fc.s1{min-height:500px}
-.fc-inner{position:relative;width:100%;height:100%;min-height:inherit;transition:transform 1s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
-.fc.flipped .fc-inner{transform:rotateY(180deg)}
-.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:14px}
-
-/* card front (face-down) */
-.fc-front{background:linear-gradient(155deg,#141430,#0d0d22);border:1px solid #1e1e42;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem}
-.fc-front-pos{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.28em;color:var(--text-3);text-transform:uppercase}
-.fc-front-art{width:65%;height:65%;border:1px solid #272750;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;background:repeating-linear-gradient(45deg,transparent,transparent 6px,rgba(35,35,75,.2) 6px,rgba(35,35,75,.2) 7px),repeating-linear-gradient(-45deg,transparent,transparent 6px,rgba(35,35,75,.2) 6px,rgba(35,35,75,.2) 7px)}
-.fc-front-art::before,.fc-front-art::after{content:'';position:absolute;border-radius:5px}
-.fc-front-art::before{inset:8px;border:1px solid rgba(123,110,240,.25)}
-.fc-front-art::after{inset:16px;border:1px solid rgba(201,168,76,.12)}
-.fc-sym{font-family:'Cinzel',serif;font-size:1.5rem;color:rgba(123,110,240,.45);position:relative;z-index:1}
-.fc-hint{font-size:.68rem;color:var(--text-3);animation:pulse 2.2s ease infinite}
-
-/* card back (face-up = reading) */
-.fc-back{transform:rotateY(180deg);border:1px solid var(--border);display:flex;flex-direction:column}
-
-/* element themes */
-.fc-back.air  {background:linear-gradient(155deg,#16163c,#0e0e28);border-color:rgba(123,110,240,.3)}
-.fc-back.water{background:linear-gradient(155deg,#0e1c38,#090f22);border-color:rgba(74,144,212,.3)}
-.fc-back.fire {background:linear-gradient(155deg,#2a1808,#180e04);border-color:rgba(212,112,48,.3)}
-.fc-back.earth{background:linear-gradient(155deg,#0e200a,#081404);border-color:rgba(90,158,66,.3)}
-
-.fc-back.air::before   {content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#7b6ef0,transparent)}
-.fc-back.water::before {content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#4a90d4,transparent)}
-.fc-back.fire::before  {content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#d47030,transparent)}
-.fc-back.earth::before {content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#5a9e42,transparent)}
-
-/* card art canvas area */
-.card-art-area{width:100%;flex-shrink:0;overflow:hidden;border-radius:0;position:relative}
-.card-art-area svg{width:100%;height:auto;display:block}
-
-/* card info */
-.card-info{padding:1.2rem 1.3rem;flex:1;display:flex;flex-direction:column;gap:0}
-.c-pos{font-family:'Cinzel',serif;font-size:.58rem;letter-spacing:.25em;color:var(--text-3);text-transform:uppercase;margin-bottom:.4rem}
-.c-name{font-family:'Noto Serif KR',serif;font-size:1.25rem;font-weight:600;color:var(--gold-hi);line-height:1.2;margin-bottom:.28rem}
-.c-num{font-family:'Cinzel',serif;font-size:.7rem;color:var(--text-2);margin-bottom:.18rem}
-.c-num.rev{color:var(--rev)}
-.c-ori{font-size:.66rem;margin-bottom:.85rem;padding-bottom:.75rem;border-bottom:1px solid rgba(255,255,255,.05)}
-.ori-up{color:var(--gold-lo)}
-.ori-rv{color:var(--rev)}
-.c-kw{display:flex;flex-wrap:wrap;gap:.32rem;margin-bottom:.85rem}
-.c-kw span{padding:.2rem .5rem;border-radius:20px;font-size:.66rem}
-.air  .c-kw span{background:rgba(123,110,240,.14);color:#9b8ef8;border:1px solid rgba(123,110,240,.2)}
-.water.c-kw span{background:rgba(74,144,212,.14);color:#6ab0e8;border:1px solid rgba(74,144,212,.2)}
-.fire .c-kw span{background:rgba(212,112,48,.14);color:#e09060;border:1px solid rgba(212,112,48,.2)}
-.earth.c-kw span{background:rgba(90,158,66,.14);color:#7abe60;border:1px solid rgba(90,158,66,.2)}
-.fc-back.rev-card .c-kw span{filter:brightness(.7) saturate(.6)}
-
-.c-reading{font-family:'Noto Serif KR',serif;font-size:.87rem;line-height:1.85;color:var(--text);font-weight:300;flex:1;white-space:pre-line}
-.fc-back.rev-card .c-reading{color:#a8a0c0}
-.c-reading-cursor{display:inline-block;width:2px;height:1em;background:var(--gold);opacity:.8;vertical-align:text-bottom;animation:blink .8s step-end infinite;margin-left:1px}
-@keyframes blink{0%,100%{opacity:.8}50%{opacity:0}}
-
-/* reset */
-.reset-area{text-align:center;margin-top:2rem;display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
-.r-btn{padding:.6rem 2rem;background:transparent;color:var(--text-2);border:1px solid var(--border);border-radius:30px;font-size:.8rem;cursor:pointer;transition:all .3s;font-family:'Noto Sans KR',sans-serif}
-.r-btn:hover{border-color:var(--gold-lo);color:var(--gold)}
-.r-btn.pri{background:rgba(201,168,76,.07);border-color:var(--gold-lo);color:var(--gold)}
-.r-btn.pri:hover{background:rgba(201,168,76,.14)}
-
-/* loading */
-.ld-overlay{display:none;position:fixed;inset:0;background:rgba(4,4,13,.92);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:1.2rem;backdrop-filter:blur(6px)}
-.ld-overlay.on{display:flex}
-.ld-spin{width:46px;height:46px;border:2px solid rgba(201,168,76,.13);border-top-color:var(--gold);border-radius:50%;animation:spin 1.2s linear infinite}
-.ld-txt{font-family:'Noto Serif KR',serif;color:var(--silver);font-size:.86rem;font-weight:300;letter-spacing:.05em}
-
-/* viewer */
-.vtgl{position:fixed;bottom:1rem;right:1rem;background:rgba(14,14,32,.8);border:1px solid var(--border);color:var(--text-3);padding:.38rem .9rem;border-radius:20px;cursor:pointer;font-size:.68rem;z-index:50;font-family:'Noto Sans KR',sans-serif;backdrop-filter:blur(4px);transition:all .2s}
-.vtgl:hover{border-color:var(--gold-lo);color:var(--gold)}
-.vwr{display:none;position:fixed;inset:0;background:rgba(4,4,13,.97);z-index:300;padding:2rem;overflow-y:auto}
-.vwr.on{display:block}
-.vwr h2{color:var(--gold);margin-bottom:1rem;font-family:'Cinzel',serif;font-weight:400}
-.vwr-close{position:fixed;top:1rem;right:1rem;background:#7a2820;color:#fff;border:none;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1.1rem;z-index:301}
-.vstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1rem;margin-bottom:2rem}
-.vstat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center}
-.vstat .n{font-size:1.8rem;color:var(--gold);font-weight:700;font-family:'Cinzel',serif}
-.vstat .l{font-size:.7rem;color:var(--text-2);margin-top:.3rem}
-.vsamp{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1rem}
-.vsamp h4{color:var(--purple);margin-bottom:.5rem;font-size:.82rem}
-.vsamp p{font-size:.82rem;margin-bottom:.3rem;color:var(--text)}
-.vsamp .vl{color:var(--gold-lo);font-weight:700}
-
-/* anims */
+/* ===== LOADER ===== */
+#loader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s}
+#loader.hidden{opacity:0;pointer-events:none}
+.loader-orb{width:60px;height:60px;border-radius:50%;border:2px solid var(--gold-lo);border-top-color:var(--gold);animation:spin 1s linear infinite}
+.loader-text{margin-top:1.2rem;font-family:'Cinzel',serif;color:var(--gold-lo);font-size:.85rem;letter-spacing:.3em}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:.35}50%{opacity:1}}
 
-/* responsive */
-@media(max-width:680px){
-  .topic-grid{gap:.7rem}
-  .topic-btn{padding:1.1rem .8rem}
-  .card-grid{grid-template-columns:repeat(7,1fr);gap:4px}
-  .spread{grid-template-columns:1fr;gap:1.2rem}
-  .fc{min-height:340px}
-  .spread.s1{grid-template-columns:1fr}
-  .spread-tabs{flex-direction:column}
-  .syn-box{padding:1.3rem}
+/* ===== 3D CANVAS ===== */
+#c3d{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+
+/* ===== INTRO CURTAIN ===== */
+#intro{position:fixed;inset:0;z-index:100;pointer-events:none}
+.curtain-l,.curtain-r{position:absolute;top:0;bottom:0;width:52%;transition:transform 1.8s cubic-bezier(.65,0,.35,1);z-index:101;box-shadow:0 0 60px rgba(0,0,0,.8)}
+.curtain-l{left:0;transform:translateX(0);border-right:3px solid var(--gold-lo);background:linear-gradient(90deg,#1a0825 0%,#2d1040 40%,#1a0825 100%)}
+.curtain-r{right:0;transform:translateX(0);border-left:3px solid var(--gold-lo);background:linear-gradient(90deg,#1a0825 0%,#2d1040 60%,#1a0825 100%)}
+.curtain-l::before,.curtain-r::before{content:'';position:absolute;top:0;bottom:0;width:40px;background:repeating-linear-gradient(180deg,transparent,transparent 18px,rgba(201,168,76,.08) 18px,rgba(201,168,76,.08) 20px)}
+.curtain-l::before{right:0}.curtain-r::before{left:0}
+.curtain-l.open{transform:translateX(-105%)}
+.curtain-r.open{transform:translateX(105%)}
+.intro-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:102;transition:opacity 1s}
+.intro-center.hidden{opacity:0}
+.intro-title{font-family:'Cinzel',serif;font-size:clamp(1rem,3vw,1.6rem);color:var(--gold);letter-spacing:.4em;opacity:0;animation:fadeUp 1.5s ease .3s forwards}
+.intro-sub{font-family:'Noto Serif KR',serif;font-size:clamp(.8rem,2vw,1rem);color:var(--text-2);margin-top:.8rem;opacity:0;animation:fadeUp 1.5s ease .8s forwards;font-weight:300}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== STAR PARTICLES ===== */
+.stars{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.star{position:absolute;width:3px;height:3px;background:var(--gold);border-radius:50%;opacity:0;animation:twinkle var(--dur) ease-in-out var(--delay) infinite}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(.5)}50%{opacity:var(--bright);transform:scale(1)}}
+
+/* ===== HUD ===== */
+#hud{position:fixed;top:0;left:0;right:0;z-index:50;text-align:center;padding:1rem;opacity:0;transition:opacity 1s}
+#hud.show{opacity:1}
+.hud-title{font-family:'Cinzel',serif;font-size:.7rem;letter-spacing:.5em;color:var(--gold-lo);text-transform:uppercase}
+
+/* ===== DIALOGUE BOX ===== */
+#dialogue{position:fixed;bottom:0;left:0;right:0;z-index:60;padding:0 1rem 1.2rem;opacity:0;transform:translateY(30px);transition:all .5s cubic-bezier(.4,0,.2,1);pointer-events:none}
+#dialogue.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.dlg-box{max-width:700px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.2rem 1.4rem 1rem;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:relative;cursor:pointer;min-height:90px}
+.dlg-box::before{content:'';position:absolute;inset:-1px;border-radius:16px;background:linear-gradient(135deg,rgba(201,168,76,.15),transparent 50%);z-index:-1;pointer-events:none}
+.dlg-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem}
+.dlg-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.dlg-icon.bt{background:linear-gradient(135deg,#1a1a3e,#2a2050);border:1px solid var(--gold-lo)}
+.dlg-icon.rb{background:linear-gradient(135deg,#3a2015,#4a2820);border:1px solid #c08050}
+.dlg-name{font-family:'Cinzel',serif;font-size:.75rem;letter-spacing:.15em;color:var(--gold)}
+.dlg-name.rb-name{color:#e0a070}
+.dlg-text{font-family:'Noto Serif KR',serif;font-size:.95rem;line-height:1.7;color:var(--text);min-height:1.4em;font-weight:300}
+.dlg-indicator{position:absolute;bottom:8px;right:14px;color:var(--gold-lo);font-size:.7rem;animation:bounce .8s ease-in-out infinite}
+.dlg-indicator.hidden{display:none}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(4px)}}
+
+/* ===== OPTIONS ===== */
+#options{position:fixed;bottom:0;left:0;right:0;z-index:65;padding:0 1rem 1.2rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;opacity:0;transform:translateY(20px);transition:all .4s;pointer-events:none}
+#options.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.opt-btn{max-width:500px;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1.2rem;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:.9rem;cursor:pointer;transition:all .25s;text-align:left;backdrop-filter:blur(12px)}
+.opt-btn:hover{background:rgba(123,110,240,.12);border-color:var(--purple);transform:translateX(4px)}
+.opt-btn:active{transform:scale(.98)}
+
+/* ===== TOPIC & SPREAD BUTTONS ===== */
+.select-panel{position:fixed;bottom:8rem;left:0;right:0;z-index:65;display:flex;flex-wrap:wrap;justify-content:center;gap:.7rem;padding:0 1.5rem;opacity:0;transform:translateY(20px);transition:all .5s;pointer-events:none}
+.select-panel.show{opacity:1;transform:translateY(0);pointer-events:auto}
+.sel-btn{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1rem 1.4rem;color:var(--text);cursor:pointer;transition:all .3s;text-align:center;backdrop-filter:blur(12px);min-width:120px}
+.sel-btn:hover{border-color:var(--gold);box-shadow:0 0 20px rgba(201,168,76,.15);transform:translateY(-3px)}
+.sel-btn:active{transform:scale(.96)}
+.sel-btn .sel-icon{font-size:1.6rem;display:block;margin-bottom:.4rem}
+.sel-btn .sel-label{font-size:.85rem;font-weight:500}
+.sel-btn .sel-desc{font-size:.7rem;color:var(--text-2);margin-top:.2rem}
+
+/* ===== CARD AREA ===== */
+#cardArea{position:fixed;top:50%;left:50%;transform:translate(-50%,-55%);z-index:55;display:flex;gap:1.2rem;opacity:0;transition:all .6s;pointer-events:none}
+#cardArea.show{opacity:1;pointer-events:auto}
+.card-slot{width:130px;height:210px;perspective:1000px;cursor:pointer;transition:transform .3s;position:relative}
+.card-slot:hover:not(.flipped){transform:translateY(-8px)}
+.card-slot.flipped{cursor:default}
+.card-inner{position:relative;width:100%;height:100%;transition:transform .8s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
+.card-slot.flipped .card-inner{transform:rotateY(180deg)}
+.card-back,.card-front{position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;overflow:hidden}
+
+.card-back{background:linear-gradient(135deg,#1a0a2e 0%,#2d1550 50%,#1a0a2e 100%);border:2px solid var(--gold-lo);display:flex;align-items:center;justify-content:center}
+.card-back::before{content:'';position:absolute;inset:8px;border:1px solid rgba(201,168,76,.2);border-radius:6px;pointer-events:none}
+.card-back::after{content:'✦';font-size:2.2rem;color:var(--gold);text-shadow:0 0 20px rgba(201,168,76,.5);animation:pulse-glow 2s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{opacity:.6;text-shadow:0 0 10px rgba(201,168,76,.3)}50%{opacity:1;text-shadow:0 0 25px rgba(201,168,76,.7)}}
+.card-back .card-pattern{position:absolute;inset:14px;border:1px solid rgba(201,168,76,.1);border-radius:4px;background:repeating-conic-gradient(rgba(201,168,76,.03) 0% 25%,transparent 0% 50%) 0 0/20px 20px;pointer-events:none}
+
+.card-front{transform:rotateY(180deg);background:linear-gradient(180deg,#0d0520 0%,#1a0a3e 50%,#0d0520 100%);border:2px solid var(--gold);padding:.8rem .6rem;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center}
+.card-front::before{content:'';position:absolute;inset:6px;border:1px solid rgba(201,168,76,.25);border-radius:5px;pointer-events:none}
+.card-front.reversed-front{transform:rotateY(180deg) rotateZ(180deg)}
+.card-numeral{font-family:'Cinzel',serif;font-size:.65rem;color:var(--gold-lo);letter-spacing:.2em}
+.card-name-en{font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold);letter-spacing:.1em;margin-top:.1rem}
+.card-name-kr{font-family:'Noto Serif KR',serif;font-size:1.05rem;color:var(--text);font-weight:600;margin:.15rem 0}
+.card-symbol{font-size:2rem;margin:.1rem 0;filter:drop-shadow(0 0 8px rgba(201,168,76,.4))}
+.card-direction{font-size:.6rem;padding:.12rem .4rem;border-radius:20px;margin-top:.1rem}
+.card-direction.upright{color:var(--gold);background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.2)}
+.card-direction.reversed{color:var(--red-soft);background:rgba(207,102,85,.12);border:1px solid rgba(207,102,85,.2)}
+.card-keywords{font-size:.5rem;color:var(--text-2);line-height:1.3;margin-top:.1rem}
+.card-pos-label{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-family:'Noto Sans KR',sans-serif;font-size:.7rem;color:var(--text-2);white-space:nowrap;letter-spacing:.05em}
+.card-slot.entering{animation:cardEnter .6s cubic-bezier(.4,0,.2,1) both}
+@keyframes cardEnter{from{opacity:0;transform:translateY(80px) rotateX(30deg)}to{opacity:1;transform:translateY(0) rotateX(0)}}
+
+/* ===== READING PANEL ===== */
+#readingPanel{position:fixed;top:0;bottom:0;right:0;width:min(420px,90vw);z-index:70;background:var(--surface);border-left:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transform:translateX(100%);transition:transform .6s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:2rem 1.5rem}
+#readingPanel.show{transform:translateX(0)}
+.reading-close{position:absolute;top:1rem;right:1rem;background:none;border:1px solid var(--border);color:var(--text-2);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.reading-close:hover{border-color:var(--gold);color:var(--gold)}
+.reading-title{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold);letter-spacing:.2em;margin-bottom:1.5rem}
+.reading-card-section{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(201,168,76,.1)}
+.reading-card-header{font-family:'Noto Serif KR',serif;font-size:.95rem;color:var(--gold-hi);margin-bottom:.4rem}
+.reading-card-pos{font-size:.7rem;color:var(--purple);margin-bottom:.6rem}
+.reading-interp{font-family:'Noto Serif KR',serif;font-size:.88rem;line-height:1.8;color:var(--text);font-weight:300}
+.reading-interp p{margin-bottom:.5rem}
+.char-label{font-weight:500;margin-right:.3rem}
+.char-label.bt-label{color:var(--gold)}
+.char-label.rb-label{color:#e0a070}
+.reading-summary{background:rgba(123,110,240,.08);border:1px solid rgba(123,110,240,.15);border-radius:12px;padding:1.2rem;margin-top:1rem}
+.reading-summary-title{font-family:'Cinzel',serif;font-size:.8rem;color:var(--purple);letter-spacing:.15em;margin-bottom:.6rem}
+
+/* ===== RESTART ===== */
+#restartBtn{position:fixed;bottom:1.5rem;right:1.5rem;z-index:80;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.6rem 1.2rem;color:var(--text-2);font-size:.8rem;cursor:pointer;opacity:0;transition:all .3s;pointer-events:none;font-family:'Noto Sans KR',sans-serif}
+#restartBtn.show{opacity:1;pointer-events:auto}
+#restartBtn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .card-slot{width:100px;height:165px}
+  .card-name-kr{font-size:.85rem}
+  .card-symbol{font-size:1.6rem}
+  .card-name-en{font-size:.55rem}
+  .dlg-text{font-size:.88rem}
+  .sel-btn{min-width:100px;padding:.8rem 1rem}
+  #cardArea{gap:.7rem}
+  #readingPanel{width:100vw}
 }
-@media(max-width:420px){
-  .topic-grid{grid-template-columns:1fr}
-  .card-grid{grid-template-columns:repeat(5,1fr)}
+@media(max-width:380px){
+  .card-slot{width:85px;height:140px}
+  .card-name-kr{font-size:.75rem}
+  .card-symbol{font-size:1.3rem}
+  .sel-btn{min-width:85px;padding:.6rem .8rem}
+  .sel-btn .sel-icon{font-size:1.2rem}
 }
 </style>
 </head>
 <body>
-<canvas id="cvs"></canvas>
 
-<header class="hdr">
-  <div class="hdr-eyebrow">Oracle · Tarot · 신탁</div>
-  <h1 class="hdr-title">신탁의 시간</h1>
-  <div class="hdr-line"></div>
-</header>
+<div id="loader"><div class="loader-orb"></div><div class="loader-text">Loading...</div></div>
+<div class="stars" id="stars"></div>
+<canvas id="c3d"></canvas>
 
-<main class="wrap">
-
-<!-- Phase 0 -->
-<div id="p0">
-  <p class="p-lead">오늘 무엇이 궁금하신가요</p>
-  <div class="topic-grid">
-    <button class="topic-btn on" data-t="love" onclick="selTopic(this)">
-      <span class="topic-icon">♡</span>
-      <div class="topic-name">연애 · 관계</div>
-      <div class="topic-desc">감정, 만남, 이별, 연인</div>
-    </button>
-    <button class="topic-btn" data-t="career" onclick="selTopic(this)">
-      <span class="topic-icon">◈</span>
-      <div class="topic-name">직업 · 커리어</div>
-      <div class="topic-desc">일, 공부, 취업, 성과</div>
-    </button>
-    <button class="topic-btn" data-t="finance" onclick="selTopic(this)">
-      <span class="topic-icon">◎</span>
-      <div class="topic-name">재물 · 재정</div>
-      <div class="topic-desc">돈, 투자, 기회, 풍요</div>
-    </button>
-    <button class="topic-btn" data-t="general" onclick="selTopic(this)">
-      <span class="topic-icon">✦</span>
-      <div class="topic-name">전반적인 흐름</div>
-      <div class="topic-desc">인생, 방향, 내면, 성장</div>
-    </button>
+<div id="intro">
+  <div class="curtain-l" id="curtainL"></div>
+  <div class="curtain-r" id="curtainR"></div>
+  <div class="intro-center" id="introCenter">
+    <div class="intro-title">✦ STARLIGHT TAROT ✦</div>
+    <div class="intro-sub">운명이 당신을 기다리고 있습니다</div>
   </div>
-  <div class="cq-wrap">
-    <label>또는 직접 질문을 입력하세요 (선택)</label>
-    <input id="cq" class="cq-input" type="text" placeholder="예: 지금 이 사람과 계속 만나야 할까요?" maxlength="60" oninput="cqVal=this.value.trim()">
-  </div>
-  <div class="spread-sect">
-    <label>리딩 방식</label>
-    <div class="spread-tabs">
-      <button class="spread-tab" data-s="1" onclick="selSpread(this)">
-        <div class="tt">오늘의 카드</div>
-        <div class="ts">한 장 — 지금 이 순간의 메시지</div>
-      </button>
-      <button class="spread-tab on" data-s="3" onclick="selSpread(this)">
-        <div class="tt">과거 · 현재 · 미래</div>
-        <div class="ts">세 장 — 흐름의 전체 이야기</div>
-      </button>
+</div>
+
+<div id="hud"><div class="hud-title">✦ Starlight Tarot ✦</div></div>
+
+<div id="dialogue">
+  <div class="dlg-box" id="dlgBox">
+    <div class="dlg-header">
+      <div class="dlg-icon bt" id="dlgIcon">🤵</div>
+      <div class="dlg-name" id="dlgName">바텐더</div>
     </div>
-  </div>
-  <button class="start-btn" onclick="goSel()">카드 뽑으러 가기</button>
-</div>
-
-<!-- Phase 1 -->
-<div id="p1">
-  <button class="back-btn" onclick="goBack()">← 처음으로</button>
-  <div class="sel-hdr">
-    <div class="sel-hdr-l">
-      <h2 id="sel-title">카드를 세 장 고르세요</h2>
-      <p>마음이 끌리는 카드를 순서대로 집어주세요</p>
-    </div>
-    <div class="t-badge" id="tbadge">♡ 연애 · 관계</div>
-  </div>
-  <div class="preview" id="preview"></div>
-  <div class="card-grid" id="cgrid"></div>
-  <div style="text-align:center;margin-top:1.2rem">
-    <button class="read-btn" id="rbtn" onclick="startRead()">리딩 시작</button>
+    <div class="dlg-text" id="dlgText"></div>
+    <div class="dlg-indicator hidden" id="dlgNext">▼</div>
   </div>
 </div>
 
-<!-- Phase 2 -->
-<div id="p2">
-  <div class="r-hdr">
-    <div class="r-sub">오늘의 리딩</div>
-    <div class="r-topic" id="r-topic-name"></div>
-  </div>
-  <div class="syn-box">
-    <div class="syn-label">흐름의 서사</div>
-    <div class="syn-text" id="syn-txt"></div>
-  </div>
-  <div class="spread" id="spread"></div>
-  <div class="reset-area">
-    <button class="r-btn" onclick="doReset()">다시 뽑기</button>
-    <button class="r-btn pri" onclick="goHome()">주제 변경</button>
-  </div>
+<div id="options"></div>
+<div class="select-panel" id="topicSelect"></div>
+<div class="select-panel" id="spreadSelect"></div>
+<div id="cardArea"></div>
+
+<div id="readingPanel">
+  <button class="reading-close" id="readingClose">✕</button>
+  <div id="readingContent"></div>
 </div>
 
-</main>
-
-<div class="ld-overlay" id="ld">
-  <div class="ld-spin"></div>
-  <div class="ld-txt">카드의 목소리를 듣고 있습니다…</div>
-</div>
-
-<button class="vtgl" onclick="toggleViewer()">데이터 뷰어</button>
-<div class="vwr" id="vwr">
-  <button class="vwr-close" onclick="toggleViewer()">×</button>
-  <h2>생성 데이터 뷰어</h2>
-  <div class="vstats" id="vstats"></div>
-  <div id="vsamps"></div>
-</div>
+<button id="restartBtn">🔮 다시 보기</button>
 
 <script>
-// ═══════════════════════════════════════════════════
-// CARD DATA
-// ═══════════════════════════════════════════════════
-const CD=[
-  {id:"major_00",name:"바보",n:0,el:"air",sym:"✦",
-   kw:{u:["새로운 시작","자유","순수함","모험","가능성"],r:["무모함","경솔함","현실도피","준비 부족","혼돈"]},
-   core:{u:"두려움 없이 새로운 여정을 시작할 때입니다. 순수한 마음으로 한 걸음을 내딛으세요.",r:"충분한 준비 없이 무작정 뛰어드는 것은 위험합니다. 현실을 직시하세요."},
-   snip:{love:"새로운 만남이 다가오고 있습니다. 두근거림을 분석하지 말고 마음 가는 대로 가보세요.",career:"새로운 도전이 기다립니다. 실패가 두렵더라도 과감하게 첫걸음을 내딛을 때입니다.",finance:"예상치 못한 곳에서 기회가 올 수 있습니다. 유연하게 열린 자세로 대처하세요."}},
-  {id:"major_01",name:"마법사",n:1,el:"air",sym:"⚡",
-   kw:{u:["창조력","의지력","기술","집중","실현"],r:["속임수","혼란","재능 낭비","미숙함","조작"]},
-   core:{u:"당신에게는 원하는 것을 만들어낼 힘이 있습니다. 가진 자원을 활용하고 행동하세요.",r:"능력을 제대로 발휘하지 못하고 있습니다. 방향을 재점검하세요."},
-   snip:{love:"적극적으로 표현하면 관계가 발전합니다. 당신이 먼저 움직일 때입니다.",career:"당신의 역량을 발휘할 절호의 시기입니다. 망설임 없이 능력을 보여주세요.",finance:"현명한 계획과 집중력으로 원하는 성과를 낼 수 있습니다."}},
-  {id:"major_02",name:"여사제",n:2,el:"water",sym:"☽",
-   kw:{u:["직관","지혜","내면의 목소리","비밀","잠재력"],r:["억압된 감정","직관 무시","혼란","표면적 판단","불안"]},
-   core:{u:"내면의 목소리에 귀 기울일 때입니다. 직관이 진실을 알려줄 것입니다.",r:"직관을 무시하고 겉모습에만 집중하고 있습니다. 내면을 들여다보세요."},
-   snip:{love:"감정에 솔직해지면 답이 보입니다. 상대방의 말보다 느낌에 귀 기울여 보세요.",career:"서두르지 말고 상황을 조용히 관찰하세요. 지금은 정보를 모으는 시기입니다.",finance:"직감을 따르되 기본적인 확인은 반드시 필요합니다. 보이는 것이 전부가 아닙니다."}},
-  {id:"major_03",name:"여황제",n:3,el:"earth",sym:"✿",
-   kw:{u:["풍요","모성","자연","창조","아름다움"],r:["의존","과잉보호","공허함","불안정","질투"]},
-   core:{u:"풍요와 사랑이 당신을 감싸고 있습니다. 삶의 아름다움을 온전히 누리세요.",r:"지나친 집착이나 의존은 오히려 성장을 막습니다. 균형을 찾으세요."},
-   snip:{love:"따뜻하고 감각적인 감정이 꽃피는 시기입니다. 사랑을 주고받는 것 모두를 즐기세요.",career:"창의적인 프로젝트가 결실을 맺는 시기입니다. 당신 안의 창조력을 믿으세요.",finance:"물질적 풍요가 찾아오고 있습니다. 과하지 않게 누리며 감사하는 마음을 가지세요."}},
-  {id:"major_04",name:"황제",n:4,el:"fire",sym:"♔",
-   kw:{u:["권위","구조","리더십","안정","통제력"],r:["독재","경직","미성숙","과잉 통제","무력감"]},
-   core:{u:"체계를 세우고 단단한 기반을 만들 때입니다. 리더십을 발휘하세요.",r:"지나친 통제는 역효과를 낳습니다. 유연함을 배우세요."},
-   snip:{love:"안정적이고 신뢰할 수 있는 관계를 구축할 수 있는 시기입니다. 책임감이 사랑의 언어가 됩니다.",career:"리더십과 책임감으로 주변의 인정을 받을 수 있습니다. 체계적으로 접근하세요.",finance:"체계적인 계획과 관리가 재정 안정을 가져옵니다. 충동보다 원칙을 따르세요."}},
-  {id:"major_05",name:"교황",n:5,el:"earth",sym:"✚",
-   kw:{u:["전통","가르침","신념","제도","영적 지혜"],r:["독단","형식주의","억압","반항","교조적"]},
-   core:{u:"검증된 지혜와 가르침 속에 답이 있습니다. 멘토를 찾거나 내면의 신념을 따르세요.",r:"관습에 얽매이지 마세요. 자신만의 길을 찾을 때입니다."},
-   snip:{love:"서로의 가치관을 존중하는 것이 관계의 핵심입니다. 진지한 대화가 도움이 됩니다.",career:"경험 많은 선배나 멘토의 조언이 실질적인 도움이 됩니다.",finance:"안전하고 검증된 방법으로 접근하세요. 새로운 것보다 기본에 충실하세요."}},
-  {id:"major_06",name:"연인",n:6,el:"air",sym:"♡",
-   kw:{u:["사랑","조화","선택","유대","가치관"],r:["갈등","불화","유혹","회피","불균형"]},
-   core:{u:"중요한 선택의 순간입니다. 마음이 이끄는 방향을 따르세요.",r:"내면의 갈등이 관계를 흔들고 있습니다. 진심을 마주하세요."},
-   snip:{love:"깊은 유대감이 형성되거나 중요한 선택의 순간이 옵니다. 가슴이 원하는 것을 선택하세요.",career:"중요한 갈림길에 서 있습니다. 외적 조건보다 자신의 가치관에 따라 결정하세요.",finance:"파트너십이나 협력이 재정적 이익을 가져올 수 있습니다. 신뢰할 수 있는 사람과 함께하세요."}},
-  {id:"major_07",name:"전차",n:7,el:"water",sym:"❋",
-   kw:{u:["의지","승리","전진","결단","자신감"],r:["방향 상실","공격성","좌절","통제 불능","무모한 질주"]},
-   core:{u:"강한 의지로 앞으로 나아가세요. 승리가 가까이 있습니다.",r:"어디로 가고 있는지 점검하세요. 방향을 잃고 있을 수 있습니다."},
-   snip:{love:"적극적으로 다가가면 좋은 결과가 있습니다. 용기 있게 감정을 표현하세요.",career:"목표를 향해 단호하게 전진하세요. 지금은 속도와 결단이 필요한 때입니다.",finance:"과감한 결단이 필요한 시기입니다. 두 발 앞으로 내딛으세요."}},
-  {id:"major_08",name:"힘",n:8,el:"fire",sym:"∞",
-   kw:{u:["용기","인내","자비","내면의 힘","극복"],r:["자기 의심","나약함","분노","강압","두려움"]},
-   core:{u:"부드러운 힘으로 어려움을 극복할 수 있습니다. 자신을 믿으세요.",r:"두려움에 휩쓸리지 마세요. 내면의 힘을 되찾을 때입니다."},
-   snip:{love:"인내와 이해, 그리고 부드러운 강인함으로 관계가 더 깊어집니다.",career:"끈기 있게 밀고 나가면 성과가 나타납니다. 감정을 다스리는 것이 핵심입니다.",finance:"조급해하지 말고 꾸준히 노력하세요. 지금의 인내가 나중에 큰 보상이 됩니다."}},
-  {id:"major_09",name:"은둔자",n:9,el:"earth",sym:"◯",
-   kw:{u:["성찰","고독","지혜","탐구","인도"],r:["고립","외로움","편협","거부","방황"]},
-   core:{u:"혼자만의 시간이 필요합니다. 내면을 탐구하며 진정한 답을 찾으세요.",r:"지나친 고립은 도움이 되지 않습니다. 세상과 다시 연결되세요."},
-   snip:{love:"혼자서 감정을 정리할 시간이 필요합니다. 섣불리 결정하지 말고 스스로와 대화하세요.",career:"깊은 전문성을 쌓거나 혼자서 고민을 정리할 수 있는 시기입니다.",finance:"신중하게 분석하고 결정하세요. 조용히 공부하면 답이 보입니다."}},
-  {id:"major_10",name:"운명의 수레바퀴",n:10,el:"fire",sym:"⊕",
-   kw:{u:["전환점","운명","기회","순환","행운"],r:["저항","정체","불운","반복","통제 불능"]},
-   core:{u:"변화의 바람이 불어옵니다. 흐름에 올라타면 행운이 따릅니다.",r:"같은 패턴이 반복되고 있습니다. 변화를 받아들이세요."},
-   snip:{love:"운명적인 만남이나 관계의 중요한 전환점이 찾아올 수 있습니다.",career:"새로운 기회의 문이 열리고 있습니다. 놓치지 말고 잡으세요.",finance:"재정적 전환점이 다가오고 있습니다. 흐름이 바뀌는 것을 느껴보세요."}},
-  {id:"major_11",name:"정의",n:11,el:"air",sym:"⚖",
-   kw:{u:["공정","균형","진실","책임","결과"],r:["불공정","편견","회피","불균형","부정직"]},
-   core:{u:"공정한 결과가 돌아옵니다. 진실되게 행동하면 보상을 받습니다.",r:"균형이 무너져 있습니다. 공정한 시각으로 상황을 재평가하세요."},
-   snip:{love:"서로에게 솔직하고 공정하게 대하는 것이 관계의 기반입니다.",career:"정당한 노력에 합당한 보상이 옵니다. 원칙대로 하면 됩니다.",finance:"공정한 거래와 투명한 관리가 핵심입니다. 욕심보다 균형을 택하세요."}},
-  {id:"major_12",name:"매달린 사람",n:12,el:"water",sym:"⊻",
-   kw:{u:["희생","관점 전환","인내","내려놓음","깨달음"],r:["저항","무의미한 희생","이기심","지연","고착"]},
-   core:{u:"멈추고 다른 관점으로 보세요. 내려놓을 때 새로운 깨달음이 옵니다.",r:"변화를 거부하며 같은 자리에 머물고 있습니다. 유연해지세요."},
-   snip:{love:"잠시 물러서서 관계를 객관적으로 바라보세요. 다른 시각이 해답을 줄 수 있습니다.",career:"지금은 기다림이 최선의 전략입니다. 억지로 밀어붙이지 마세요.",finance:"당장의 이익보다 장기적 관점이 필요합니다. 지금의 희생이 나중에 빛납니다."}},
-  {id:"major_13",name:"죽음",n:13,el:"water",sym:"◆",
-   kw:{u:["변화","종결","재탄생","전환","해방"],r:["변화 저항","정체","두려움","집착","미련"]},
-   core:{u:"하나의 장이 끝나고 새로운 시작이 옵니다. 과거를 보내주세요.",r:"끝내야 할 것을 붙잡고 있습니다. 놓아줄 용기가 필요합니다."},
-   snip:{love:"관계의 변화를 받아들이세요. 끝은 새로운 시작이기도 합니다.",career:"과감한 변화가 새로운 기회를 엽니다. 낡은 틀을 버릴 때입니다.",finance:"낡은 재정 습관을 버리고 새로운 접근 방식이 필요합니다."}},
-  {id:"major_14",name:"절제",n:14,el:"fire",sym:"≋",
-   kw:{u:["균형","조화","인내","절제","치유"],r:["과잉","불균형","조급함","극단","낭비"]},
-   core:{u:"균형과 조화를 유지하세요. 서두르지 않으면 모든 것이 제자리를 찾습니다.",r:"극단으로 치우치고 있습니다. 중심을 잡고 균형을 되찾으세요."},
-   snip:{love:"서로의 차이를 인정하고 조화를 이루세요. 완벽하지 않아도 함께 맞춰가는 과정이 사랑입니다.",career:"꾸준하고 균형 잡힌 접근이 성과를 냅니다. 조급함을 내려놓으세요.",finance:"수입과 지출의 균형을 맞추세요. 지금은 극단적인 선택보다 안정이 먼저입니다."}},
-  {id:"major_15",name:"악마",n:15,el:"earth",sym:"⬡",
-   kw:{u:["유혹","집착","속박","물질주의","욕망"],r:["해방","자각","극복","독립","속박 탈출"]},
-   core:{u:"무언가에 얽매여 있지 않은지 돌아보세요. 집착의 사슬을 인식하는 것이 첫걸음입니다.",r:"속박에서 벗어나고 있습니다. 자유를 향한 첫걸음을 축하하세요."},
-   snip:{love:"건강하지 못한 관계 패턴을 점검하세요. 집착과 사랑을 구별하는 것이 중요합니다.",career:"과도한 야망이나 외적 보상에만 집중하고 있지 않은지 살피세요.",finance:"충동적인 소비나 물질적 집착을 경계하세요. 진짜 필요한 것이 무엇인지 생각하세요."}},
-  {id:"major_16",name:"탑",n:16,el:"fire",sym:"⚡",
-   kw:{u:["파괴","충격","각성","해방","진실 드러남"],r:["변화 저항","두려움","은폐","지연된 붕괴","거부"]},
-   core:{u:"갑작스러운 변화가 찾아옵니다. 무너진 자리에서 더 단단한 것을 세울 수 있습니다.",r:"필연적인 변화를 피하려 하고 있습니다. 진실을 마주할 용기를 내세요."},
-   snip:{love:"충격적인 변화가 오히려 관계를 정화합니다. 숨겨진 진실이 드러날 수 있습니다.",career:"예상치 못한 전환이 새로운 길을 열어줍니다. 당황하지 말고 재건에 집중하세요.",finance:"재정적 충격에 대비하되 재건의 기회로 삼을 준비를 하세요."}},
-  {id:"major_17",name:"별",n:17,el:"air",sym:"★",
-   kw:{u:["희망","영감","치유","평화","재생"],r:["절망","불신","단절","무기력","환멸"]},
-   core:{u:"어둠 뒤에 빛이 옵니다. 희망을 놓지 마세요, 치유가 시작되고 있습니다.",r:"희망을 잃고 있다면 잠시 쉬어가세요. 빛은 반드시 다시 찾아옵니다."},
-   snip:{love:"상처가 치유되고 새로운 따뜻한 인연이 싹틉니다. 마음을 열어두세요.",career:"영감이 넘치는 시기입니다. 꿈꿔왔던 방향으로 나아가도 될 때입니다.",finance:"조금씩 나아지고 있습니다. 조급해하지 말고 희망을 가지세요."}},
-  {id:"major_18",name:"달",n:18,el:"water",sym:"☾",
-   kw:{u:["환상","직관","불안","무의식","꿈"],r:["혼란 해소","기만 발각","두려움 극복","착각","진실 직면"]},
-   core:{u:"보이는 것이 전부가 아닙니다. 직관을 믿되, 환상에 빠지지 마세요.",r:"혼란이 걷히고 있습니다. 진실이 서서히 드러나고 있습니다."},
-   snip:{love:"감정의 안개 속에서 진심을 구별하세요. 느낌을 믿되 확인은 필요합니다.",career:"불확실한 상황에서 직감을 따르되 반드시 객관적으로 검증하세요.",finance:"겉보기에 좋아 보이는 기회도 신중하게 확인하세요. 감추어진 것이 있을 수 있습니다."}},
-  {id:"major_19",name:"태양",n:19,el:"fire",sym:"☀",
-   kw:{u:["기쁨","성공","활력","낙관","자신감"],r:["과시","허영","소진","지연","비현실적 기대"]},
-   core:{u:"밝은 에너지가 가득합니다. 자신감을 갖고 앞으로 나아가세요.",r:"겉으로는 밝아 보이지만 내면이 지쳐 있지 않은지 살피세요."},
-   snip:{love:"행복하고 따뜻한 에너지가 관계를 밝게 비춥니다. 솔직함이 관계를 빛나게 합니다.",career:"성과와 인정을 받는 시기입니다. 자신감 있게 능력을 드러내세요.",finance:"재정적으로 밝은 시기입니다. 감사하며 적절히 즐기세요."}},
-  {id:"major_20",name:"심판",n:20,el:"fire",sym:"❈",
-   kw:{u:["재평가","부활","결단","소명","깨달음"],r:["후회","자기비판","우유부단","거부","자기부정"]},
-   core:{u:"과거를 돌아보고 새로운 결단을 내릴 때입니다. 내면의 부름에 응답하세요.",r:"자기 비판에 갇혀 있지 마세요. 과거를 용서하고 앞으로 나아가세요."},
-   snip:{love:"과거의 관계를 돌아보고 진정한 교훈을 얻으세요. 새 출발의 순간이 왔습니다.",career:"커리어의 방향을 근본적으로 재점검할 시기입니다. 진짜 원하는 것이 무엇인지 들어보세요.",finance:"재정 습관을 재평가하고 새 출발을 준비하세요."}},
-  {id:"major_21",name:"세계",n:21,el:"earth",sym:"⊙",
-   kw:{u:["완성","성취","통합","여행","충만"],r:["미완성","지연","공허함","미련","정체"]},
-   core:{u:"하나의 여정이 아름답게 완성됩니다. 성취를 축하하고 다음 여정을 준비하세요.",r:"마무리하지 못한 과제가 남아 있습니다. 완성을 향해 마지막 한 걸음을 내딛으세요."},
-   snip:{love:"관계가 성숙하고 완전한 단계에 이르렀습니다. 함께 이룬 것을 축하하세요.",career:"목표 달성과 성취감을 맛보는 시기입니다. 이 순간을 충분히 누리세요.",finance:"재정적 안정과 풍요가 완성됩니다. 오랜 노력의 결실입니다."}}
+// =============================================
+//  STARLIGHT TAROT — 3D Tarot Reading Experience
+//  Bartender (procedural) + Rabbit (GLB) + Dialogue
+// =============================================
+(function(){
+'use strict';
+
+/* ═══════ GLOBALS ═══════ */
+var scene, camera, renderer, clock, rafId;
+var isSceneReady = false;
+
+// Bartender meshes
+var btGroup, btHeadGroup, btBody, btBowTie;
+var btEyeL, btEyeR, btPupilL, btPupilR, btBrowL, btBrowR;
+var btArmUpperL, btArmUpperR, btArmLowerL, btArmLowerR;
+var btHandL, btHandR;
+var btHandLPos, btHandRPos, btHandLRest, btHandRRest;
+var btShoulderL, btShoulderR;
+
+// Rabbit
+var rabbitModel = null, rabbitBaseY = 0, rabbitScale = 1;
+
+// Scene objects
+var crystalBall, candleFlames = [], bokehParticles = [];
+
+// Animation state
+var animTime = 0;
+var btAnimState = 'idle'; // idle | talking | thinking | surprised
+var rbAnimState = 'idle'; // idle | talking | excited
+var idleVariant = 0, idleTimer = 0;
+
+// Constants
+var TABLE_Y = 0.4;
+var BT_X = -0.7, BT_Z = -0.7;
+var RB_X = 0.6, RB_Z = -0.3;
+var HEAD_Y, BODY_Y;
+var matSkin, matVest, matShirt, matWhite;
+
+var CARD_SYMBOLS = [
+  '🃏','⚡','🌙','🌟','👑','🏛','❤️','⚔️','⚖️','🔦',
+  '🎡','💪','🔄','💀','🌿','😈','🏰','⭐','🌕','☀️','🔔','🌍'
 ];
 
-// ═══════════════════════════════════════════════════
-// CARD ART SVGs (22장 각각의 아트)
-// ═══════════════════════════════════════════════════
-const ARTS={
-  major_00:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a00" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1c1848"/><stop offset="100%" stop-color="#0a0a1e"/></linearGradient></defs><rect width="160" height="200" fill="url(#a00)"/><circle cx="112" cy="62" r="36" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1.5"/><circle cx="112" cy="62" r="24" fill="none" stroke="rgba(201,168,76,.2)" stroke-width="1"/><circle cx="112" cy="62" r="10" fill="rgba(201,168,76,.15)"/><path d="M18,178 Q55,170 82,162 L125,128" fill="none" stroke="rgba(139,110,240,.5)" stroke-width="1.2" stroke-dasharray="5,3"/><circle cx="82" cy="157" r="6" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1"/><line x1="82" y1="163" x2="78" y2="175" stroke="rgba(255,255,255,.25)" stroke-width="1"/><line x1="82" y1="163" x2="86" y2="175" stroke="rgba(255,255,255,.25)" stroke-width="1"/><circle cx="38" cy="48" r="1.8" fill="rgba(201,168,76,.75)"/><circle cx="62" cy="28" r="1.2" fill="rgba(201,168,76,.55)"/><circle cx="22" cy="78" r="1" fill="rgba(201,168,76,.45)"/><circle cx="78" cy="42" r="2.2" fill="rgba(201,168,76,.65)"/><circle cx="48" cy="18" r="1" fill="rgba(201,168,76,.4)"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(139,110,240,.5)">0</text></svg>`,
-  major_01:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a01" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1c1848"/><stop offset="100%" stop-color="#0a0a1e"/></linearGradient></defs><rect width="160" height="200" fill="url(#a01)"/><path d="M80,90 C58,70 25,70 25,92 S58,114 80,92 C102,70 135,70 135,92 S102,114 80,92Z" fill="none" stroke="rgba(201,168,76,.65)" stroke-width="2.2"/><line x1="80" y1="38" x2="80" y2="62" stroke="rgba(201,168,76,.5)" stroke-width="2"/><circle cx="80" cy="35" r="5" fill="none" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/><rect x="22" y="44" width="13" height="13" fill="none" stroke="rgba(212,112,48,.55)" stroke-width="1.2"/><circle cx="128" cy="51" r="7" fill="none" stroke="rgba(74,144,212,.55)" stroke-width="1.2"/><path d="M18,158 L32,158 L25,144Z" fill="none" stroke="rgba(90,158,66,.55)" stroke-width="1.2"/><path d="M122,146 L132,122 L142,146Z" fill="none" stroke="rgba(139,110,240,.55)" stroke-width="1.2"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(139,110,240,.5)">I</text></svg>`,
-  major_02:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a02" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e1838"/><stop offset="100%" stop-color="#060810"/></linearGradient></defs><rect width="160" height="200" fill="url(#a02)"/><path d="M80,30 A50,50 0 0 1 80,130" fill="none" stroke="rgba(180,200,255,.55)" stroke-width="1.8"/><path d="M80,30 A15,50 0 0 0 80,130" fill="rgba(74,100,180,.1)"/><line x1="35" y1="28" x2="35" y2="185" stroke="rgba(74,144,212,.35)" stroke-width="1.5"/><line x1="125" y1="28" x2="125" y2="185" stroke="rgba(74,144,212,.35)" stroke-width="1.5"/><line x1="30" y1="185" x2="130" y2="185" stroke="rgba(74,144,212,.25)" stroke-width="1"/><path d="M35,185 Q80,160 125,185" fill="rgba(74,100,180,.12)"/><line x1="35" y1="90" x2="125" y2="90" stroke="rgba(74,144,212,.2)" stroke-width="0.8" stroke-dasharray="4,4"/><line x1="35" y1="110" x2="125" y2="110" stroke="rgba(74,144,212,.15)" stroke-width="0.8" stroke-dasharray="4,4"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(74,144,212,.5)">II</text></svg>`,
-  major_03:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a03" cx="50%" cy="40%"><stop offset="0%" stop-color="#1a2810"/><stop offset="100%" stop-color="#080e04"/></radialGradient></defs><rect width="160" height="200" fill="url(#a03)"/><circle cx="80" cy="85" r="40" fill="none" stroke="rgba(180,220,80,.25)" stroke-width="1.2"/><line x1="80" y1="45" x2="80" y2="125" stroke="rgba(180,220,80,.4)" stroke-width="1.5"/><line x1="55" y1="68" x2="105" y2="102" stroke="rgba(180,220,80,.35)" stroke-width="1.2"/><path d="M55,50 Q80,38 105,50 Q115,70 105,90 Q80,105 55,90 Q45,70 55,50Z" fill="none" stroke="rgba(201,168,76,.3)" stroke-width="1"/><path d="M30,140 Q50,120 80,115 Q110,120 130,140 Q140,160 130,175 Q110,185 80,185 Q50,185 30,175 Q20,160 30,140Z" fill="none" stroke="rgba(180,220,80,.2)" stroke-width="1"/><circle cx="80" cy="28" r="3" fill="rgba(201,168,76,.6)"/><circle cx="60" cy="22" r="2" fill="rgba(201,168,76,.45)"/><circle cx="100" cy="22" r="2" fill="rgba(201,168,76,.45)"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(90,158,66,.5)">III</text></svg>`,
-  major_04:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a04" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#280e04"/><stop offset="100%" stop-color="#100604"/></linearGradient></defs><rect width="160" height="200" fill="url(#a04)"/><rect x="45" y="55" width="70" height="90" fill="none" stroke="rgba(212,112,48,.35)" stroke-width="1.5"/><rect x="55" y="65" width="50" height="70" fill="none" stroke="rgba(212,112,48,.2)" stroke-width="1"/><path d="M60,28 L80,15 L100,28 L108,55 L52,55Z" fill="none" stroke="rgba(201,168,76,.55)" stroke-width="1.5"/><line x1="80" y1="15" x2="80" y2="28" stroke="rgba(201,168,76,.6)" stroke-width="1.2"/><line x1="72" y1="23" x2="88" y2="23" stroke="rgba(201,168,76,.4)" stroke-width="1.2"/><rect x="62" y="88" width="16" height="22" rx="2" fill="none" stroke="rgba(212,112,48,.45)" stroke-width="1"/><rect x="82" y="88" width="16" height="22" rx="2" fill="none" stroke="rgba(212,112,48,.45)" stroke-width="1"/><path d="M35,155 L55,145 L45,175Z M105,145 L125,155 L115,175Z" fill="none" stroke="rgba(212,112,48,.3)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(212,112,48,.5)">IV</text></svg>`,
-  major_05:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a05" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#141a10"/><stop offset="100%" stop-color="#080c04"/></linearGradient></defs><rect width="160" height="200" fill="url(#a05)"/><line x1="45" y1="30" x2="45" y2="175" stroke="rgba(90,158,66,.4)" stroke-width="1.5"/><line x1="115" y1="30" x2="115" y2="175" stroke="rgba(90,158,66,.4)" stroke-width="1.5"/><rect x="55" y="20" width="50" height="14" rx="2" fill="none" stroke="rgba(201,168,76,.5)" stroke-width="1.2"/><rect x="60" y="38" width="40" height="11" rx="2" fill="none" stroke="rgba(201,168,76,.4)" stroke-width="1"/><rect x="65" y="52" width="30" height="9" rx="2" fill="none" stroke="rgba(201,168,76,.3)" stroke-width="1"/><path d="M65,82 L80,65 L95,82Z" fill="none" stroke="rgba(201,168,76,.45)" stroke-width="1.2"/><circle cx="80" cy="82" r="18" fill="none" stroke="rgba(90,158,66,.3)" stroke-width="1"/><path d="M65,130 L45,155 M95,130 L115,155" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1" stroke-dasharray="4,3"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(90,158,66,.5)">V</text></svg>`,
-  major_06:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a06" cx="50%" cy="30%"><stop offset="0%" stop-color="#1e1848"/><stop offset="100%" stop-color="#0a0a20"/></radialGradient></defs><rect width="160" height="200" fill="url(#a06)"/><circle cx="80" cy="38" r="22" fill="none" stroke="rgba(201,168,76,.5)" stroke-width="1.8"/><circle cx="80" cy="38" r="12" fill="rgba(201,168,76,.12)"/><path d="M55,90 L40,165" fill="none" stroke="rgba(139,110,240,.45)" stroke-width="1.5"/><path d="M105,90 L120,165" fill="none" stroke="rgba(212,112,48,.45)" stroke-width="1.5"/><circle cx="40" cy="85" r="9" fill="none" stroke="rgba(139,110,240,.4)" stroke-width="1.2"/><circle cx="120" cy="85" r="9" fill="none" stroke="rgba(212,112,48,.4)" stroke-width="1.2"/><path d="M55,62 Q80,72 105,62" fill="none" stroke="rgba(201,168,76,.3)" stroke-width="1"/><path d="M35,165 Q80,155 125,165" fill="none" stroke="rgba(139,110,240,.25)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(139,110,240,.5)">VI</text></svg>`,
-  major_07:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a07" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e1838"/><stop offset="100%" stop-color="#060810"/></linearGradient></defs><rect width="160" height="200" fill="url(#a07)"/><path d="M60,28 L100,28 L108,50 L52,50Z" fill="none" stroke="rgba(201,168,76,.55)" stroke-width="1.5"/><path d="M55,50 L55,120 L105,120 L105,50Z" fill="none" stroke="rgba(74,144,212,.35)" stroke-width="1.2"/><rect x="35" y="128" width="26" height="35" rx="3" fill="none" stroke="rgba(74,144,212,.4)" stroke-width="1.2"/><rect x="99" y="128" width="26" height="35" rx="3" fill="none" stroke="rgba(74,144,212,.4)" stroke-width="1.2"/><line x1="55" y1="85" x2="105" y2="85" stroke="rgba(74,144,212,.25)" stroke-width="1" stroke-dasharray="5,4"/><circle cx="80" cy="38" r="5" fill="rgba(201,168,76,.35)"/><path d="M68,38 L72,32 L80,38 L88,32 L92,38" fill="none" stroke="rgba(201,168,76,.4)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(74,144,212,.5)">VII</text></svg>`,
-  major_08:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a08" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#280e04"/><stop offset="100%" stop-color="#100604"/></linearGradient></defs><rect width="160" height="200" fill="url(#a08)"/><path d="M80,52 C58,32 22,32 22,55 S58,78 80,55 C102,32 138,32 138,55 S102,78 80,55Z" fill="none" stroke="rgba(212,112,48,.6)" stroke-width="2"/><ellipse cx="80" cy="130" rx="42" ry="30" fill="none" stroke="rgba(212,112,48,.3)" stroke-width="1.5"/><ellipse cx="80" cy="130" rx="28" ry="20" fill="none" stroke="rgba(212,112,48,.2)" stroke-width="1"/><path d="M55,100 Q80,110 105,100" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1.2"/><path d="M55,160 Q80,168 105,160" fill="none" stroke="rgba(201,168,76,.25)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(212,112,48,.5)">VIII</text></svg>`,
-  major_09:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a09" cx="50%" cy="55%"><stop offset="0%" stop-color="#141a10"/><stop offset="100%" stop-color="#04060a"/></radialGradient></defs><rect width="160" height="200" fill="url(#a09)"/><path d="M25,185 Q55,160 80,145 Q105,130 135,120" fill="none" stroke="rgba(90,158,66,.25)" stroke-width="1" stroke-dasharray="4,4"/><polygon points="80,62 89,82 112,82 94,96 101,116 80,102 59,116 66,96 48,82 71,82" fill="none" stroke="rgba(90,158,66,.45)" stroke-width="1.2"/><circle cx="80" cy="88" r="8" fill="rgba(90,158,66,.2)"/><circle cx="80" cy="88" r="20" fill="none" stroke="rgba(90,158,66,.2)" stroke-width="0.8"/><circle cx="80" cy="88" r="32" fill="none" stroke="rgba(90,158,66,.12)" stroke-width="0.8"/><circle cx="78" cy="42" r="3" fill="rgba(201,168,76,.6)"/><line x1="78" y1="38" x2="78" y2="28" stroke="rgba(201,168,76,.4)" stroke-width="1.2"/><path d="M72,28 L84,28 L84,36 L72,36Z" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(90,158,66,.5)">IX</text></svg>`,
-  major_10:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a10" cx="50%" cy="50%"><stop offset="0%" stop-color="#281408"/><stop offset="100%" stop-color="#100804"/></radialGradient></defs><rect width="160" height="200" fill="url(#a10)"/><circle cx="80" cy="100" r="60" fill="none" stroke="rgba(212,112,48,.25)" stroke-width="1.2"/><circle cx="80" cy="100" r="42" fill="none" stroke="rgba(212,112,48,.35)" stroke-width="1.5"/><circle cx="80" cy="100" r="22" fill="none" stroke="rgba(201,168,76,.4)" stroke-width="1.2"/><circle cx="80" cy="100" r="8" fill="rgba(201,168,76,.25)"/><line x1="80" y1="40" x2="80" y2="160" stroke="rgba(212,112,48,.3)" stroke-width="1"/><line x1="20" y1="100" x2="140" y2="100" stroke="rgba(212,112,48,.3)" stroke-width="1"/><line x1="37" y1="57" x2="123" y2="143" stroke="rgba(212,112,48,.2)" stroke-width="1"/><line x1="123" y1="57" x2="37" y2="143" stroke="rgba(212,112,48,.2)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(212,112,48,.5)">X</text></svg>`,
-  major_11:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a11" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1c1848"/><stop offset="100%" stop-color="#0a0a1e"/></linearGradient></defs><rect width="160" height="200" fill="url(#a11)"/><line x1="80" y1="20" x2="80" y2="165" stroke="rgba(139,110,240,.5)" stroke-width="2"/><path d="M80,70 L30,95 L80,115" fill="none" stroke="rgba(139,110,240,.4)" stroke-width="1.5"/><path d="M80,70 L130,95 L80,115" fill="none" stroke="rgba(139,110,240,.4)" stroke-width="1.5"/><circle cx="30" cy="95" r="6" fill="none" stroke="rgba(139,110,240,.4)" stroke-width="1.2"/><circle cx="130" cy="95" r="6" fill="none" stroke="rgba(139,110,240,.4)" stroke-width="1.2"/><line x1="30" y1="95" x2="130" y2="95" stroke="rgba(139,110,240,.2)" stroke-width="0.8" stroke-dasharray="5,4"/><path d="M68,20 L80,10 L92,20" fill="none" stroke="rgba(201,168,76,.45)" stroke-width="1.2"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(139,110,240,.5)">XI</text></svg>`,
-  major_12:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a12" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e1838"/><stop offset="100%" stop-color="#060810"/></linearGradient></defs><rect width="160" height="200" fill="url(#a12)"/><line x1="35" y1="45" x2="125" y2="45" stroke="rgba(74,144,212,.45)" stroke-width="1.8"/><line x1="35" y1="45" x2="35" y2="95" stroke="rgba(74,144,212,.35)" stroke-width="1.5"/><line x1="125" y1="45" x2="125" y2="95" stroke="rgba(74,144,212,.35)" stroke-width="1.5"/><line x1="80" y1="45" x2="80" y2="75" stroke="rgba(74,144,212,.4)" stroke-width="1.2"/><circle cx="80" cy="118" r="22" fill="none" stroke="rgba(74,144,212,.35)" stroke-width="1.5"/><circle cx="80" cy="118" r="12" fill="none" stroke="rgba(74,144,212,.2)" stroke-width="1"/><circle cx="80" cy="82" r="4" fill="rgba(201,168,76,.5)"/><line x1="60" y1="130" x2="42" y2="155" stroke="rgba(74,144,212,.3)" stroke-width="1"/><line x1="100" y1="130" x2="118" y2="155" stroke="rgba(74,144,212,.3)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(74,144,212,.5)">XII</text></svg>`,
-  major_13:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a13" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0e1838"/><stop offset="100%" stop-color="#06060e"/></linearGradient></defs><rect width="160" height="200" fill="url(#a13)"/><circle cx="120" cy="45" r="28" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1.5"/><circle cx="120" cy="45" r="18" fill="rgba(201,168,76,.08)"/><path d="M18,155 L75,155 L75,100 L18,100Z" fill="none" stroke="rgba(74,144,212,.3)" stroke-width="1"/><path d="M35,100 L55,80 L75,100" fill="none" stroke="rgba(74,144,212,.35)" stroke-width="1.2"/><circle cx="28" cy="170" r="6" fill="none" stroke="rgba(212,112,48,.45)" stroke-width="1.2"/><circle cx="48" cy="168" r="5" fill="none" stroke="rgba(212,112,48,.35)" stroke-width="1"/><circle cx="66" cy="170" r="4" fill="none" stroke="rgba(212,112,48,.3)" stroke-width="1"/><line x1="90" y1="80" x2="90" y2="175" stroke="rgba(139,110,240,.35)" stroke-width="1.5"/><path d="M82,82 L90,70 L98,82" fill="none" stroke="rgba(139,110,240,.4)" stroke-width="1.2"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(74,144,212,.5)">XIII</text></svg>`,
-  major_14:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a14" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#281408"/><stop offset="100%" stop-color="#100804"/></linearGradient></defs><rect width="160" height="200" fill="url(#a14)"/><circle cx="45" cy="85" r="22" fill="none" stroke="rgba(212,112,48,.4)" stroke-width="1.5"/><circle cx="115" cy="115" r="22" fill="none" stroke="rgba(74,144,212,.4)" stroke-width="1.5"/><path d="M45,85 Q80,90 115,115" fill="none" stroke="rgba(201,168,76,.5)" stroke-width="2"/><path d="M38,72 Q80,45 122,72" fill="none" stroke="rgba(212,112,48,.25)" stroke-width="1"/><path d="M38,128 Q80,145 122,128" fill="none" stroke="rgba(74,144,212,.25)" stroke-width="1"/><circle cx="80" cy="42" r="12" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1.2"/><path d="M74,42 L80,35 L86,42" fill="none" stroke="rgba(201,168,76,.45)" stroke-width="1.2"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(212,112,48,.5)">XIV</text></svg>`,
-  major_15:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a15" cx="50%" cy="40%"><stop offset="0%" stop-color="#141a10"/><stop offset="100%" stop-color="#04040a"/></radialGradient></defs><rect width="160" height="200" fill="url(#a15)"/><polygon points="80,38 95,62 122,62 102,78 110,104 80,88 50,104 58,78 38,62 65,62" fill="none" stroke="rgba(90,158,66,.5)" stroke-width="1.5" transform="rotate(180,80,71)"/><circle cx="80" cy="72" r="18" fill="none" stroke="rgba(90,158,66,.3)" stroke-width="1.2"/><path d="M50,130 L50,168 M110,130 L110,168" fill="none" stroke="rgba(90,158,66,.35)" stroke-width="1.5"/><path d="M50,168 Q80,162 110,168" fill="none" stroke="rgba(90,158,66,.35)" stroke-width="1.2"/><circle cx="50" cy="128" r="7" fill="none" stroke="rgba(90,158,66,.4)" stroke-width="1.2"/><circle cx="110" cy="128" r="7" fill="none" stroke="rgba(90,158,66,.4)" stroke-width="1.2"/><path d="M70,128 L72,168 M90,128 L88,168" fill="none" stroke="rgba(90,158,66,.25)" stroke-width="1" stroke-dasharray="4,3"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(90,158,66,.5)">XV</text></svg>`,
-  major_16:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a16" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#280e04"/><stop offset="100%" stop-color="#100604"/></linearGradient></defs><rect width="160" height="200" fill="url(#a16)"/><rect x="58" y="42" width="44" height="100" fill="none" stroke="rgba(212,112,48,.4)" stroke-width="1.5"/><rect x="64" y="32" width="32" height="16" rx="2" fill="none" stroke="rgba(201,168,76,.55)" stroke-width="1.5"/><path d="M110,50 L140,30 L128,68Z" fill="rgba(212,112,48,.3)" stroke="rgba(212,112,48,.6)" stroke-width="1.2"/><line x1="110" y1="50" x2="72" y2="95" stroke="rgba(212,112,48,.55)" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="155" r="7" fill="none" stroke="rgba(212,112,48,.4)" stroke-width="1.2"/><circle cx="122" cy="145" r="6" fill="none" stroke="rgba(212,112,48,.35)" stroke-width="1.2"/><line x1="46" y1="148" x2="58" y2="140" stroke="rgba(212,112,48,.3)" stroke-width="1"/><line x1="116" y1="148" x2="105" y2="140" stroke="rgba(212,112,48,.3)" stroke-width="1"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(212,112,48,.5)">XVI</text></svg>`,
-  major_17:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a17" cx="50%" cy="35%"><stop offset="0%" stop-color="#1c1848"/><stop offset="100%" stop-color="#080818"/></radialGradient></defs><rect width="160" height="200" fill="url(#a17)"/><polygon points="80,22 84,35 98,35 87,44 91,57 80,48 69,57 73,44 62,35 76,35" fill="rgba(201,168,76,.35)" stroke="rgba(201,168,76,.65)" stroke-width="1.2"/><circle cx="80" cy="40" r="28" fill="none" stroke="rgba(201,168,76,.2)" stroke-width="1"/><circle cx="30" cy="72" r="6" fill="none" stroke="rgba(201,168,76,.4)" stroke-width="1"/><circle cx="130" cy="58" r="5" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1"/><circle cx="22" cy="108" r="4" fill="none" stroke="rgba(201,168,76,.3)" stroke-width="1"/><circle cx="138" cy="95" r="4" fill="none" stroke="rgba(201,168,76,.3)" stroke-width="1"/><circle cx="45" cy="42" r="3" fill="rgba(201,168,76,.5)"/><circle cx="118" cy="85" r="3" fill="rgba(201,168,76,.45)"/><path d="M35,155 Q80,148 80,125" fill="none" stroke="rgba(139,110,240,.35)" stroke-width="1.2"/><path d="M125,155 Q80,148 80,125" fill="none" stroke="rgba(139,110,240,.35)" stroke-width="1.2"/><path d="M30,165 Q80,155 130,165" fill="rgba(74,100,180,.12)"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(139,110,240,.5)">XVII</text></svg>`,
-  major_18:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a18" cx="50%" cy="35%"><stop offset="0%" stop-color="#0e1838"/><stop offset="100%" stop-color="#060810"/></radialGradient></defs><rect width="160" height="200" fill="url(#a18)"/><circle cx="80" cy="62" r="34" fill="none" stroke="rgba(180,200,255,.4)" stroke-width="1.8"/><circle cx="80" cy="62" r="22" fill="rgba(74,100,180,.12)"/><path d="M62,52 A22,22 0 0 1 98,52" fill="rgba(74,100,180,.15)" stroke="rgba(180,200,255,.3)" stroke-width="1"/><line x1="38" y1="108" x2="38" y2="175" stroke="rgba(74,144,212,.4)" stroke-width="1.5"/><line x1="122" y1="108" x2="122" y2="175" stroke="rgba(74,144,212,.4)" stroke-width="1.5"/><rect x="30" y="108" width="16" height="20" fill="none" stroke="rgba(74,144,212,.3)" stroke-width="1"/><rect x="114" y="108" width="16" height="20" fill="none" stroke="rgba(74,144,212,.3)" stroke-width="1"/><path d="M25,175 Q80,162 135,175" fill="rgba(74,100,180,.1)" stroke="rgba(74,144,212,.3)" stroke-width="1"/><path d="M42,175 Q55,160 68,155 Q80,152 92,155 Q105,160 118,175" fill="none" stroke="rgba(74,144,212,.25)" stroke-width="0.8"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(74,144,212,.5)">XVIII</text></svg>`,
-  major_19:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a19" cx="50%" cy="40%"><stop offset="0%" stop-color="#281a04"/><stop offset="100%" stop-color="#100c02"/></radialGradient></defs><rect width="160" height="200" fill="url(#a19)"/><circle cx="80" cy="72" r="35" fill="rgba(201,168,76,.12)" stroke="rgba(201,168,76,.55)" stroke-width="2"/><circle cx="80" cy="72" r="22" fill="rgba(201,168,76,.08)"/><line x1="80" y1="28" x2="80" y2="18" stroke="rgba(201,168,76,.6)" stroke-width="2"/><line x1="80" y1="116" x2="80" y2="126" stroke="rgba(201,168,76,.6)" stroke-width="2"/><line x1="36" y1="72" x2="26" y2="72" stroke="rgba(201,168,76,.6)" stroke-width="2"/><line x1="124" y1="72" x2="134" y2="72" stroke="rgba(201,168,76,.6)" stroke-width="2"/><line x1="54" y1="46" x2="47" y2="39" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/><line x1="106" y1="46" x2="113" y2="39" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/><line x1="54" y1="98" x2="47" y2="105" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/><line x1="106" y1="98" x2="113" y2="105" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/><circle cx="80" cy="155" r="12" fill="none" stroke="rgba(201,168,76,.35)" stroke-width="1.2"/><line x1="74" y1="158" x2="70" y2="170" stroke="rgba(201,168,76,.3)" stroke-width="1.2"/><line x1="86" y1="158" x2="90" y2="170" stroke="rgba(201,168,76,.3)" stroke-width="1.2"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(201,168,76,.55)">XIX</text></svg>`,
-  major_20:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="a20" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#280e04"/><stop offset="100%" stop-color="#100604"/></linearGradient></defs><rect width="160" height="200" fill="url(#a20)"/><circle cx="80" cy="42" r="20" fill="rgba(201,168,76,.12)" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/><path d="M68,42 L80,30 L92,42" fill="none" stroke="rgba(201,168,76,.45)" stroke-width="1.2"/><path d="M62,65 L80,58 L98,65" fill="none" stroke="rgba(212,112,48,.4)" stroke-width="1.2"/><path d="M30,138 L42,118 Q55,108 55,125 L55,155 Q55,170 42,168 L30,158 Q22,148 30,138Z" fill="none" stroke="rgba(212,112,48,.4)" stroke-width="1.2"/><path d="M68,120 L80,100 L92,120 L80,118Z" fill="none" stroke="rgba(201,168,76,.4)" stroke-width="1.2"/><path d="M102,138 L118,118 Q128,108 128,125 L128,155 Q128,170 118,168 L102,158 Q95,148 102,138Z" fill="none" stroke="rgba(212,112,48,.4)" stroke-width="1.2"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(212,112,48,.5)">XX</text></svg>`,
-  major_21:`<svg viewBox="0 0 160 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a21" cx="50%" cy="50%"><stop offset="0%" stop-color="#141a10"/><stop offset="100%" stop-color="#04060a"/></radialGradient></defs><rect width="160" height="200" fill="url(#a21)"/><ellipse cx="80" cy="100" rx="55" ry="75" fill="none" stroke="rgba(90,158,66,.45)" stroke-width="1.8"/><ellipse cx="80" cy="100" rx="42" ry="60" fill="none" stroke="rgba(90,158,66,.25)" stroke-width="1"/><circle cx="80" cy="100" r="15" fill="none" stroke="rgba(201,168,76,.5)" stroke-width="1.5"/><circle cx="80" cy="100" r="6" fill="rgba(201,168,76,.3)"/><circle cx="24" cy="42" r="8" fill="none" stroke="rgba(212,112,48,.45)" stroke-width="1.2"/><circle cx="136" cy="42" r="8" fill="none" stroke="rgba(139,110,240,.45)" stroke-width="1.2"/><circle cx="24" cy="158" r="8" fill="none" stroke="rgba(90,158,66,.45)" stroke-width="1.2"/><circle cx="136" cy="158" r="8" fill="none" stroke="rgba(74,144,212,.45)" stroke-width="1.2"/><text x="80" y="196" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(90,158,66,.5)">XXI</text></svg>`
-};
+// Tarot state
+var cardData = [];
+var selectedTopic = '', selectedSpread = 1;
+var drawnCards = [], flippedCount = 0;
 
-// ═══════════════════════════════════════════════════
-// ROMAN & CONSTANTS
-// ═══════════════════════════════════════════════════
-const ROM=['0','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII','XIII','XIV','XV','XVI','XVII','XVIII','XIX','XX','XXI'];
-const PLAB3=['과거','현재','미래'];
-const PKEYS=['past','present','future'];
-const POS_U=['과거의 이 에너지가 지금의 당신을 만들어온 토대입니다.','지금 이 순간, 이 흐름이 당신을 감싸고 있습니다.','이 방향으로 나아가면 좋은 것들이 기다리고 있습니다.'];
-const POS_R=['그 에너지가 내면 깊숙이 남아 지금도 영향을 주고 있습니다.','지금 이 에너지가 막혀 있거나 왜곡된 형태로 나타나고 있습니다.','아직 준비가 더 필요할 수 있습니다. 조급해하지 마세요.'];
-const TNAME={love:'연애 · 관계',career:'직업 · 커리어',finance:'재물 · 재정',general:'전반적인 흐름'};
-const TLAB={love:'♡ 연애 · 관계',career:'◈ 직업 · 커리어',finance:'◎ 재물 · 재정',general:'✦ 전반적인 흐름'};
-const TKEY={love:'love',career:'career',finance:'finance',general:null};
+// Dialogue state
+var dlgQueue = [], dlgTyping = false, dlgTypeTimer = null;
+var dlgCallback = null, dlgFullText = '', dlgCharIdx = 0;
+var TYPE_SPEED = 35;
 
-// ═══════════════════════════════════════════════════
-// KOREAN GRAMMAR HELPERS
-// ═══════════════════════════════════════════════════
-function ga(s){const c=s.charCodeAt(s.length-1);if(c<0xAC00||c>0xD7A3)return '이';return(c-0xAC00)%28===0?'가':'이';}
-function eul(s){const c=s.charCodeAt(s.length-1);if(c<0xAC00||c>0xD7A3)return '을';return(c-0xAC00)%28===0?'를':'을';}
-function eun(s){const c=s.charCodeAt(s.length-1);if(c<0xAC00||c>0xD7A3)return '은';return(c-0xAC00)%28===0?'는':'은';}
-function i_ga(s){return ga(s)==='가'?'이':'가';} // opposite, for 이/가 alternation
+// DOM refs
+var $dlg, $dlgText, $dlgName, $dlgIcon, $dlgNext, $dlgBox;
+var $options, $topicSel, $spreadSel, $cardArea;
 
-// ── Pilot data (data/pilot.json 에서 lazy-load) ──
-let _pilotData = null;
-async function loadPilot() {
-  if (_pilotData) return _pilotData;
-  try {
-    const r = await fetch('data/pilot.json');
-    if (r.ok) _pilotData = await r.json();
-  } catch(e) {}
-  return _pilotData;
+/* ═══════ THREE.JS BOOTSTRAP ═══════ */
+function initThree(onReady) {
+  var s1 = document.createElement('script');
+  s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+  s1.onload = function() {
+    var s2 = document.createElement('script');
+    s2.src = 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+    s2.onload = function() { onReady(); };
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
 }
 
+function setupScene() {
+  var canvas = document.getElementById('c3d');
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
 
-// ── State ──
-let topic='love', cqVal='', spread=3;
-let sel=[], orients={};
-let bcache={}, idata=null;
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x06030f);
+  scene.fog = new THREE.FogExp2(0x06030f, 0.12);
 
-// ── Phase 0 ──
-function selTopic(btn){
-  document.querySelectorAll('.topic-btn').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  topic=btn.dataset.t;
-  document.getElementById('cq').value='';
-  cqVal='';
-}
-function selSpread(btn){
-  document.querySelectorAll('.spread-tab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  spread=parseInt(btn.dataset.s);
-}
-function goSel(){
-  document.getElementById('p0').style.display='none';
-  document.getElementById('p1').style.display='block';
-  initSel();
-}
-function goBack(){
-  document.getElementById('p1').style.display='none';
-  document.getElementById('p0').style.display='block';
-  sel=[];orients={};
-}
-function goHome(){
-  document.getElementById('p2').classList.remove('on');
-  document.getElementById('p2').style.display='none';
-  document.getElementById('p0').style.display='block';
-  sel=[];orients={};
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50);
+  camera.position.set(0, 2.2, 3.0);
+  camera.lookAt(0, 0.9, -0.2);
+  clock = new THREE.Clock();
+
+  // ── Lights ──
+  scene.add(new THREE.AmbientLight(0x1a1030, 0.4));
+  var dir = new THREE.DirectionalLight(0x8888cc, 0.3);
+  dir.position.set(2, 5, 3); scene.add(dir);
+
+  var cL = new THREE.PointLight(0xff9944, 0.8, 4);
+  cL.position.set(-1.0, TABLE_Y + 0.7, 0.1); scene.add(cL);
+  var cR = new THREE.PointLight(0xff9944, 0.8, 4);
+  cR.position.set(1.0, TABLE_Y + 0.7, 0.1); scene.add(cR);
+
+  var crystalLight = new THREE.PointLight(0x7b6ef0, 0.5, 3);
+  crystalLight.position.set(0, TABLE_Y + 0.5, 0.15); scene.add(crystalLight);
+
+  var spot = new THREE.SpotLight(0xc9a84c, 0.4, 8, Math.PI / 6, 0.5);
+  spot.position.set(0, 4, 1); spot.target.position.set(0, TABLE_Y, 0);
+  scene.add(spot); scene.add(spot.target);
+
+  // ── Materials ──
+  matSkin  = new THREE.MeshPhongMaterial({ color: 0xffdcb0, shininess: 15 });
+  matVest  = new THREE.MeshPhongMaterial({ color: 0x1a1a2e, shininess: 35, specular: 0x222244 });
+  matShirt = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, shininess: 25 });
+  matWhite = new THREE.MeshPhongMaterial({ color: 0xfefefe, shininess: 50 });
+
+  BODY_Y = TABLE_Y + 0.55;
+  HEAD_Y = BODY_Y + 0.72;
+  btShoulderL = new THREE.Vector3(BT_X - 0.42, BODY_Y + 0.28, BT_Z + 0.05);
+  btShoulderR = new THREE.Vector3(BT_X + 0.42, BODY_Y + 0.28, BT_Z + 0.05);
+  btHandLRest = new THREE.Vector3(BT_X - 0.45, TABLE_Y + 0.18, BT_Z + 0.55);
+  btHandRRest = new THREE.Vector3(BT_X + 0.45, TABLE_Y + 0.18, BT_Z + 0.55);
+  btHandLPos  = btHandLRest.clone();
+  btHandRPos  = btHandRRest.clone();
+
+  createTable();
+  createCandles();
+  createCrystalBall();
+  createBartender();
+  createArms();
+  createHands();
+  createBokeh();
+  loadRabbit();
+
+  window.addEventListener('resize', onResize);
+  isSceneReady = true;
+  animate();
 }
 
-// ── Phase 1 ──
-function initSel(){
-  const n=spread;
-  document.getElementById('sel-title').textContent=n===1?'카드를 한 장 고르세요':'카드를 세 장 고르세요';
-  document.getElementById('tbadge').textContent=cqVal||TLAB[topic];
-  // slots
-  const pv=document.getElementById('preview');
-  pv.innerHTML='';
-  const labs=n===1?['오늘의 메시지']:PLAB3;
-  for(let i=0;i<n;i++){
-    const s=document.createElement('div');
-    s.className='slot';s.id='slot'+i;
-    s.innerHTML=`<div class="sl">${labs[i]}</div><div class="sn">—</div><div class="so"></div>`;
-    pv.appendChild(s);
-  }
-  initGrid();
-  document.getElementById('rbtn').classList.remove('vis');
-  sel=[];orients={};
+function onResize() {
+  if (!camera || !renderer) return;
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
-function initGrid(){
-  const g=document.getElementById('cgrid');
-  g.innerHTML='';
-  CD.forEach((c,i)=>{
-    const d=document.createElement('div');
-    d.className='tc';d.dataset.idx=i;
-    d.innerHTML=`<span class="tc-rom">${ROM[i]}</span>`;
-    d.onclick=()=>toggleCard(i);
-    g.appendChild(d);
+/* ═══════ TABLE & SCENE OBJECTS ═══════ */
+function createTable() {
+  var clothMat = new THREE.MeshPhongMaterial({ color: 0x1a0830, shininess: 10 });
+  var table = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.4, 0.08, 32), clothMat);
+  table.position.y = TABLE_Y; table.receiveShadow = true; scene.add(table);
+
+  var rimMat = new THREE.MeshPhongMaterial({ color: 0xc9a84c, shininess: 100 });
+  var rim = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.025, 8, 48), rimMat);
+  rim.position.y = TABLE_Y + 0.04; rim.rotation.x = Math.PI / 2; scene.add(rim);
+
+  var legMat = new THREE.MeshPhongMaterial({ color: 0x2a1510, shininess: 20 });
+  var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, TABLE_Y, 8), legMat);
+  leg.position.y = TABLE_Y / 2; scene.add(leg);
+
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12),
+    new THREE.MeshPhongMaterial({ color: 0x08040e, shininess: 5 }));
+  floor.rotation.x = -Math.PI / 2; scene.add(floor);
+
+  var wall = new THREE.Mesh(new THREE.PlaneGeometry(8, 5),
+    new THREE.MeshPhongMaterial({ color: 0x0a0618, side: THREE.DoubleSide }));
+  wall.position.set(0, 2.5, -2.5); scene.add(wall);
+
+  // Decorative circles on cloth
+  var cMat = new THREE.MeshBasicMaterial({ color: 0xc9a84c, transparent: true, opacity: 0.08, side: THREE.DoubleSide });
+  [0.5, 0.8].forEach(function(r) {
+    var c = new THREE.Mesh(new THREE.RingGeometry(r, r + 0.02, 32), cMat);
+    c.rotation.x = -Math.PI / 2; c.position.y = TABLE_Y + 0.045; scene.add(c);
   });
 }
 
-function toggleCard(idx){
-  const els=document.querySelectorAll('.tc');
-  const el=els[idx];
-  const ex=sel.indexOf(idx);
-  if(ex>=0){
-    sel.splice(ex,1);
-    el.classList.remove('sel');
-    delete el.dataset.ord;
-    delete orients[idx];
-    refreshSel();return;
-  }
-  if(sel.length>=spread)return;
-  sel.push(idx);
-  orients[idx]=Math.random()<0.5?'u':'r';
-  el.classList.add('sel');
-  el.dataset.ord=sel.length;
-  refreshSel();
-}
+function createCandles() {
+  var pos = [[-1.05, 0.3], [1.05, 0.3], [-0.4, -0.9], [0.4, -0.9]];
+  var cMat = new THREE.MeshPhongMaterial({ color: 0xf0e8d0 });
+  var hMat = new THREE.MeshPhongMaterial({ color: 0xc9a84c, shininess: 80 });
+  var fMat = new THREE.MeshBasicMaterial({ color: 0xffaa33 });
 
-function refreshSel(){
-  const n=spread;
-  const labs=n===1?['오늘의 메시지']:PLAB3;
-  for(let i=0;i<n;i++){
-    const sl=document.getElementById('slot'+i);
-    if(!sl)continue;
-    const sn=sl.querySelector('.sn'),so=sl.querySelector('.so');
-    if(i<sel.length){
-      const idx=sel[i],o=orients[idx];
-      sn.textContent=CD[idx].name;
-      so.innerHTML=o==='u'?'<span class="ori-u">정방향</span>':'<span class="ori-r">역방향 ↻</span>';
-      sl.classList.add('filled');
-    } else {
-      sn.textContent='—';so.innerHTML='';
-      sl.classList.remove('filled');
-    }
-  }
-  // reorder numbers
-  document.querySelectorAll('.tc').forEach(el=>{
-    const idx=parseInt(el.dataset.idx);
-    const pos=sel.indexOf(idx);
-    el.classList.remove('sel','dis');
-    delete el.dataset.ord;
-    if(pos>=0){el.classList.add('sel');el.dataset.ord=pos+1;}
-  });
-  if(sel.length>=spread){
-    document.querySelectorAll('.tc:not(.sel)').forEach(el=>el.classList.add('dis'));
-  }
-  document.getElementById('rbtn').classList.toggle('vis',sel.length===spread);
-}
-
-// ── 한국어 조사 자동 선택 ──
-function j(word,pair){
-  const c=(word||'').slice(-1).charCodeAt(0);
-  const jong=(c>=0xAC00&&c<=0xD7A3)?(c-0xAC00)%28:0;
-  switch(pair){
-    case'이/가':return jong?'이':'가';
-    case'은/는':return jong?'은':'는';
-    case'을/를':return jong?'을':'를';
-    case'와/과':case'과/와':return jong?'과':'와';
-    case'으로/로':return(jong===0||jong===8)?'로':'으로';
-    case'이나/나':return jong?'이나':'나';
-  }
-  return '';
-}
-
-// ── Reading text (리더가 직접 말하듯 자연스럽게) ──
-function getReadText(cidx,pidx,o){
-  const c=CD[cidx],sk=TKEY[topic],isR=o==='r';
-  const kws=isR?c.kw.r:c.kw.u;
-  const topicLabel=cqVal||TNAME[topic];
-  const topicSnip=sk?c.snip[sk]:'';
-  const v=c.n%3; // 카드 번호 기반 변형
-
-  // 1단락: 자리 + 카드 소개 (리더 말투)
-  let intro;
-  if(spread===1){
-    intro=isR
-      ?`오늘 ${c.name} 카드가 역방향으로 나왔네요. 이 카드가 역방향으로 왔다는 건, 이 에너지가 지금 당신 안에서 막혀 있거나 뭔가 잘 안 풀리고 있다는 신호예요. ${c.core.r} 억지로 밀어붙이기보다는, 지금 어디서 저항이 느껴지는지를 먼저 들여다보는 게 좋아요.`
-      :`오늘 ${c.name} 카드가 나왔어요. 이 카드가 오늘 당신 앞에 나타났다는 게 우연이 아니에요. ${c.core.u} 오늘 하루, 이 에너지가 당신 주변 어디에서 살아 움직이고 있는지 한번 느껴봐요.`;
-  } else if(pidx===0){
-    intro=isR
-      ?`${c.name} 카드가 과거 자리에서 역방향으로 나왔어요. 지나온 시간 속에 이 에너지가 제대로 표현되지 못하고 어딘가 눌려 있었던 것 같아요. ${c.core.r} 그 억눌렸던 감정이나 상황이 지금도 어떤 형태로 영향을 미치고 있을 수 있거든요. 과거의 일이라고 그냥 넘기기보단, 그게 지금 나한테 어떻게 남아 있는지를 한번 들여다볼 필요가 있어요.`
-      :`${c.name} 카드가 과거 자리에 있네요. 지나온 시간 속에서 이 카드의 에너지가 당신에게 굉장히 강하게 자리했다는 의미예요. ${c.core.u} 어떤 경험이 떠오르세요? 그게 뭐든, 그 시간들이 지금의 당신을 만들어온 중요한 토대가 됐을 거예요.`;
-  } else if(pidx===1){
-    intro=isR
-      ?`지금 현재 자리에 ${c.name}${j(c.name,'이/가')} 역방향으로 있어요. 지금 이 에너지가 어딘가 막혀 있거나 제대로 흐르지 못하고 있다는 신호예요. ${c.core.r} 지금 실제로 뭔가 안 된다는 느낌, 답답한 느낌이 있다면 이 카드가 딱 그 부분을 짚어주고 있는 거예요. 억지로 해결하려 하기보다는, 지금 어디서 막혀 있는지를 먼저 솔직하게 인정해보는 게 첫걸음이에요.`
-      :`지금 현재 자리에 ${c.name}${j(c.name,'이/가')} 있어요. 지금 이 순간 당신 주변에 이 에너지가 강하게 흐르고 있다는 뜻이에요. ${c.core.u} 지금 자신이 어떤 상황에 있는지, 이 카드가 상당히 정확하게 비춰주고 있을 거예요. 지금 느끼는 감정이나 상황을 이 카드의 에너지랑 한번 연결해봐요.`;
-  } else {
-    intro=isR
-      ?`앞으로의 자리에 ${c.name}${j(c.name,'이/가')} 역방향으로 나왔어요. 이 에너지가 막힌 형태로 다가올 수 있다는 신호예요. ${c.core.r} 지금부터 이 부분을 미리 인식하고 준비해두는 게 중요해요. 역방향이 무조건 나쁜 게 아니라, 이 에너지가 균형을 잃었을 때 어떻게 나타나는지를 미리 알고 있으면 그만큼 슬기롭게 대응할 수 있거든요.`
-      :`앞으로의 자리에 ${c.name}${j(c.name,'이/가')} 나왔어요. 이 에너지가 앞으로 당신 삶 속으로 들어올 거예요. ${c.core.u} 이게 아직 일어나지 않은 일이니까, 지금부터 이 흐름을 의식하면서 그걸 어떻게 맞이할지를 조금씩 생각해두면 훨씬 수월하게 나아갈 수 있어요.`;
-  }
-
-  // 2단락: 주제별 해석
-  let topicPart='';
-  if(topicSnip){
-    const wrap=[
-      `${topicLabel} 쪽에서 보면, ${topicSnip}`,
-      `${topicLabel}${j(topicLabel,'으로/로')} 이 카드를 보면, ${topicSnip}`,
-      `${topicLabel}에 관해서라면, ${topicSnip}`
-    ];
-    topicPart=wrap[v];
-  }
-
-  // 3단락: 키워드 풀이 (리더 스타일)
-  const kwPart=isR
-    ?`이 카드를 키워드로 풀면 '${kws[0]}', '${kws[1]}', '${kws[2]}' 이런 에너지들이에요. 역방향이니까 이것들이 지금 긍정적으로 나오기보다는, 반대 방향으로 왜곡되거나 과도하게 나타나고 있을 가능성이 높아요. 혹시 지금 '${kws[0]}' 쪽에서 뭔가 막히거나 힘들다는 느낌이 드는 게 있다면, 그게 바로 이 카드가 지금 당신에게 하고 싶은 말인 거예요. 거기서부터 천천히 풀어나가면 돼요.`
-    :`이 카드의 에너지를 키워드로 보면 '${kws[0]}', '${kws[1]}', '${kws[2]}' 이런 흐름이에요. 이 중에서 지금 자신의 상황이랑 가장 가깝게 느껴지는 게 뭔지 생각해봐요. 그게 바로 이 카드가 당신한테 직접 건네는 메시지거든요. 특히 '${kws[0]}'의 에너지가 지금 이 시기에 가장 강하게 작용하고 있을 가능성이 높아요.`;
-
-  // 4단락: 실질적 조언 (따뜻하고 구체적으로)
-  const adviceU=[
-    `과거가 남긴 흔적을 없애거나 바꿀 수는 없지만, 그 경험이 남겨준 것들을 지금 어떻게 쓸 수 있는지는 온전히 당신이 선택할 수 있어요. 이 카드가 과거 자리에서 말하는 건, 그 시간이 헛되지 않았다는 거예요. 어떤 경험이었든 간에, 그게 지금의 당신 안에 뭔가를 심어놨거든요. 그게 뭔지 찾아보는 것, 그게 지금 해볼 수 있는 가장 좋은 일이에요.`,
-    `지금 이 에너지가 주변에 흐르고 있다는 걸 알았으니까, 오늘 하루 딱 한 가지만 해봐요. 이 카드가 말하는 방향으로 아주 작은 행동 하나만 실제로 움직여보는 거예요. 거창할 필요 없어요. 지금 이 시기엔 작은 것 하나가 생각보다 훨씬 큰 변화를 만들어낼 수 있거든요.`,
-    `앞으로 이 에너지가 다가왔을 때 너무 긴장하지 않아도 돼요. 이 카드가 미래에 있다는 건, 당신이 그 흐름을 맞이할 준비가 되어가고 있다는 신호이기도 하거든요. 지금부터 이 에너지를 의식하면서, 그게 왔을 때 어떻게 반응하고 싶은지를 마음속으로 그려봐요. 준비된 사람한테는 같은 흐름도 훨씬 다르게 작용해요.`
-  ];
-  const adviceR=[
-    `억눌렸던 에너지는 사라지지 않고 어딘가에 쌓여요. 지금 그게 뭔지를 판단하거나 비난하지 말고, 그냥 있는 그대로 바라봐요. 그게 치유의 시작이에요. 과거의 일이라고 그냥 덮어두면, 나중에 예상치 못한 방식으로 다시 나타날 수 있거든요.`,
-    `막혀 있는 에너지를 억지로 풀려고 하면 오히려 더 단단해질 수 있어요. 지금은 그 흐름을 부드럽게 인식하는 것만으로도 충분해요. 어떤 두려움이나 저항이 있는지 솔직하게 바라보고, 자신한테 좀 너그러운 시간을 허락해봐요. 그게 지금 가장 필요한 일이에요.`,
-    `역방향 에너지는 나쁜 신호가 아니에요. 오히려 방향을 다시 잡을 수 있는 기회가 온 거예요. 지금부터 작은 것 하나씩 의식적으로 바꿔나가면, 이 에너지가 다가왔을 때 훨씬 균형 잡힌 형태로 맞이할 수 있어요.`
-  ];
-  const advice=isR?adviceR[Math.min(pidx,2)]:adviceU[Math.min(pidx,2)];
-
-  const parts=[intro];
-  if(topicPart) parts.push(topicPart);
-  return parts.join('\n\n');
-}
-
-function makeSynopsis(cards,ors){
-  const tl=cqVal||TNAME[topic];
-  const isR=ors.map(o=>o==='r');
-
-  if(spread===1){
-    const c=cards[0],r=isR[0];
-    const kw=r?c.kw.r[0]:c.kw.u[0];
-    const core=r?c.core.r:c.core.u;
-    const snip=(TKEY[topic]&&c.snip[TKEY[topic]])||'';
-    return `오늘 <em>${tl}</em>에 관해 <em>${c.name}</em> 카드가 나왔어요.`
-      +` ${core}`
-      +(snip?` ${snip}`:'')
-      +` 오늘 하루 <em>${kw}</em>의 에너지가 어디서 느껴지는지 한번 살펴봐요.`;
-  }
-
-  // 3카드 전체 서사
-  const [c0,c1,c2]=cards;
-  const [r0,r1,r2]=isR;
-  const kw0=r0?c0.kw.r[0]:c0.kw.u[0];
-  const kw1=r1?c1.kw.r[0]:c1.kw.u[0];
-  const kw2=r2?c2.kw.r[0]:c2.kw.u[0];
-  const core0=r0?c0.core.r:c0.core.u;
-  const core1=r1?c1.core.r:c1.core.u;
-  const core2=r2?c2.core.r:c2.core.u;
-  const ori0=r0?'역방향':'정방향';
-  const ori1=r1?'역방향':'정방향';
-  const ori2=r2?'역방향':'정방향';
-  const sk=TKEY[topic];
-  const snip1=sk?c1.snip[sk]:'';
-
-  const p1openers=[
-    `<em>${tl}</em>에 관해 세 장이 함께 그리는 이야기가 있어요.`
-    +` <em>${kw0}</em>에서 <em>${kw1}</em>${j(kw1,'을/를')} 지나 <em>${kw2}</em>${j(kw2,'으로/로')}—지금 당신의 흐름이 이 방향을 가리키고 있어요.`,
-    `지금 <em>${tl}</em>${j(tl,'을/를')} 놓고 보면, 세 카드가 하나의 흐름으로 이어져요.`
-    +` <em>${c0.name}</em>, <em>${c1.name}</em>, <em>${c2.name}</em>—이 순서가 지금 당신의 이야기예요.`,
-    `세 장을 나란히 놓고 보면 <em>${tl}</em>에 관한 그림이 보여요.`
-    +` <em>${kw0}</em>의 시간을 지나, 지금 <em>${kw1}</em>의 자리에 있고, 앞으로 <em>${kw2}</em>${j(kw2,'이/가')} 기다리고 있어요.`
-  ];
-  const p1=p1openers[c0.n%3];
-
-  const p2=`과거 자리의 <em>${c0.name}</em>${j(c0.name,'은/는')} 당신이 <em>${kw0}</em>의 에너지 속에서 이 여정을 시작해왔다는 걸 보여줘요.`
-    +` ${core0}`
-    +` 그 경험이 지금의 자리로 당신을 데려온 거예요.`;
-
-  const p3=`지금 이 순간 현재 자리에는 <em>${c1.name}</em>${j(c1.name,'이/가')}${ori1==='역방향'?' 역방향으로':''} 있어요.`
-    +` ${core1}`
-    +(snip1?` ${tl} 쪽에서 보면, ${snip1}`:' 지금 당신이 서 있는 지점이 이 카드의 에너지와 맞닿아 있을 거예요.');
-
-  const p4=`앞으로는 <em>${c2.name}</em>의 에너지가 기다리고 있어요.`
-    +` ${core2}`
-    +` 지금의 흐름이 이 방향으로 이어진다면 <em>${tl}</em>에서 새로운 국면이 열릴 가능성이 높아요.`
-    +(r2?` 다만 역방향으로 나온 만큼, <em>${kw2}</em>의 에너지가 막히지 않도록 지금부터 준비해두는 게 좋아요.`:` <em>${kw2}</em>의 에너지가 자연스럽게 찾아올 수 있도록 지금부터 그 흐름을 열어두세요.`);
-
-  const p5=`<em>${kw0}</em>${j(kw0,'이/가')} <em>${kw1}</em>${j(kw1,'을/를')} 만들고, 그게 다시 <em>${kw2}</em>${j(kw2,'으로/로')} 이어지는 흐름. 각 카드를 열어보면서 이 연결이 지금 당신에게 어떻게 닿는지 느껴봐요.`;
-
-  return [p1,p2,p3,p4,p5].join('<br><br>');
-}
-
-// ── Start reading ──
-async function startRead(){
-  if(sel.length!==spread)return;
-  const cards=sel.map(i=>CD[i]);
-  const ors=sel.map(i=>orients[i]);
-  document.getElementById('ld').classList.add('on');
-
-  let bkt=null;
-  if(spread===3){
-    const key=`${cards[0].id}_${cards[1].id}_${cards[2].id}_ur`;
-    bkt=await fetchBkt(cards[0].id,key).catch(()=>null);
-  }
-
-  document.getElementById('ld').classList.remove('on');
-
-  // switch to p2
-  document.getElementById('p1').style.display='none';
-  const p2=document.getElementById('p2');
-  p2.style.display='block';
-  p2.classList.add('on');
-
-  document.getElementById('r-topic-name').textContent=cqVal||TNAME[topic];
-
-  const syn=bkt?.synergy?bkt.synergy:makeSynopsis(cards,ors);
-  typewrite(document.getElementById('syn-txt'),syn,true);
-
-  const spEl=document.getElementById('spread');
-  spEl.innerHTML='';
-  spEl.className=spread===1?'spread s1':'spread';
-
-  const plabs=spread===1?['오늘의 메시지']:PLAB3;
-
-  cards.forEach((card,i)=>{
-    const o=ors[i];
-    const isR=o==='r';
-
-    let txt;
-    if(bkt){
-      const coreText=bkt[PKEYS[i]]||'';
-      const sk=TKEY[topic];
-      const topicLabel=cqVal||TNAME[topic];
-      const topicSnip=sk?card.snip[sk]:'';
-      const kws=isR?card.kw.r:card.kw.u;
-      const oriNote=isR?`역방향으로 온 만큼, 지금 '${kws[0]}' 에너지가 어디서 막혀 있는지 조용히 들여다봐요.`:'';
-      const topicNote=topicSnip?`${topicLabel} 쪽에서 보면, ${topicSnip}`:'';
-      txt=[coreText,topicNote,oriNote].filter(Boolean).join('\n\n');
-    } else {
-      txt=getReadText(sel[i],i,o);
-    }
-
-    const kws=(isR?card.kw.r:card.kw.u).slice(0,3);
-    const oriHtml=isR?'<span class="ori-rv">↻ 역방향</span>':'<span class="ori-up">↑ 정방향</span>';
-    const artSVG=ARTS[card.id]||'';
-
-    const fc=document.createElement('div');
-    fc.className=`fc${spread===1?' s1':''}`;
-    fc.innerHTML=`<div class="fc-inner">
-      <div class="fc-front">
-        <div class="fc-front-pos">${plabs[i]}</div>
-        <div class="fc-front-art"><span class="fc-sym">✦</span></div>
-        <div class="fc-hint">터치하여 열기</div>
-      </div>
-      <div class="fc-back ${card.el}${isR?' rev-card':''}">
-        <div class="card-art-area">${artSVG}</div>
-        <div class="card-info">
-          <div class="c-pos">${plabs[i]}</div>
-          <div class="c-name">${card.name}</div>
-          <div class="c-num${isR?' rev':''}">${ROM[card.n]}${isR?' — 역방향':' — 정방향'}</div>
-          <div class="c-ori">${oriHtml}</div>
-          <div class="c-kw">${kws.map(k=>`<span>${k}</span>`).join('')}</div>
-          <div class="c-reading" id="cr-${i}"></div>
-        </div>
-      </div>
-    </div>`;
-    spEl.appendChild(fc);
-
-    // sequential flip + expand + typewriter
-    setTimeout(()=>{
-      fc.classList.add('flipped');
-      setTimeout(()=>{
-        // 플립 완료 후 카드 높이를 콘텐츠에 맞게 자동 확장
-        const inner=fc.querySelector('.fc-inner');
-        const back=fc.querySelector('.fc-back');
-        const front=fc.querySelector('.fc-front');
-        front.style.display='none';
-        inner.style.cssText+='transform:none;transition:none;height:auto;';
-        back.style.position='relative';
-        back.style.transform='none';
-        fc.style.minHeight='0';
-        fc.style.height='auto';
-        // 타이프라이터 시작
-        const el=document.getElementById(`cr-${i}`);
-        if(el) typewrite(el,txt,false);
-      },1050);
-    }, 500+i*900);
+  pos.forEach(function(p) {
+    var candle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.25, 8), cMat);
+    candle.position.set(p[0], TABLE_Y + 0.17, p[1]); scene.add(candle);
+    var holder = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 0.06, 8), hMat);
+    holder.position.set(p[0], TABLE_Y + 0.06, p[1]); scene.add(holder);
+    var flame = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 4), fMat);
+    flame.position.set(p[0], TABLE_Y + 0.32, p[1]); flame.scale.set(0.8, 1.5, 0.8);
+    scene.add(flame);
+    candleFlames.push({ mesh: flame, baseY: TABLE_Y + 0.32, ph: Math.random() * 6.28 });
   });
 }
 
-async function fetchBkt(firstId,key){
-  // 1차: web/ 버킷 (shard.py로 생성된 전체 데이터)
-  if(!idata){
-    const r=await fetch('web/index.json').catch(()=>null);
-    if(r?.ok) idata=await r.json();
+function createCrystalBall() {
+  var bMat = new THREE.MeshPhongMaterial({
+    color: 0x6655cc, transparent: true, opacity: 0.3, shininess: 200, specular: 0xaaaaff });
+  crystalBall = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 16), bMat);
+  crystalBall.position.set(0, TABLE_Y + 0.24, 0.15); scene.add(crystalBall);
+
+  var core = new THREE.Mesh(new THREE.SphereGeometry(0.08, 12, 8),
+    new THREE.MeshBasicMaterial({ color: 0x7b6ef0, transparent: true, opacity: 0.4 }));
+  crystalBall.add(core);
+
+  var base = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.13, 0.06, 12),
+    new THREE.MeshPhongMaterial({ color: 0xc9a84c, shininess: 80 }));
+  base.position.set(0, TABLE_Y + 0.07, 0.15); scene.add(base);
+}
+
+/* ═══════ BARTENDER (Procedural) ═══════ */
+function createBartender() {
+  btGroup = new THREE.Group();
+  btGroup.position.set(BT_X, 0, BT_Z);
+
+  // Body
+  btBody = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.3, 0.72, 12), matVest);
+  btBody.position.y = BODY_Y; btGroup.add(btBody);
+
+  // Gold buttons
+  var btnMat = new THREE.MeshPhongMaterial({ color: 0xc9a84c, shininess: 100 });
+  for (var i = 0; i < 3; i++) {
+    var btn = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), btnMat);
+    btn.position.set(0, BODY_Y + 0.1 - i * 0.15, 0.3); btGroup.add(btn);
   }
-  if(idata){
-    const info=idata?.buckets?.[firstId];
-    if(info){
-      if(!bcache[firstId]){
-        const r=await fetch(`web/buckets/${info.file}`).catch(()=>null);
-        if(r?.ok) bcache[firstId]=await r.json();
+
+  // Collar
+  var collar = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 0.08, 10), matShirt);
+  collar.position.y = BODY_Y + 0.38; btGroup.add(collar);
+
+  // Shoulder pads
+  var pGeo = new THREE.SphereGeometry(0.1, 8, 6);
+  [-1, 1].forEach(function(s) {
+    var pad = new THREE.Mesh(pGeo, matVest);
+    pad.position.set(s * 0.36, BODY_Y + 0.25, 0.05); pad.scale.set(1, 0.8, 1.1);
+    btGroup.add(pad);
+  });
+
+  // Bow tie
+  btBowTie = new THREE.Group();
+  btBowTie.position.set(0, BODY_Y + 0.38, 0.18);
+  var bMat = new THREE.MeshPhongMaterial({ color: 0xcc0022, shininess: 40 });
+  btBowTie.add(new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 6), bMat));
+  var wGeo = new THREE.BoxGeometry(0.06, 0.04, 0.02);
+  [-1, 1].forEach(function(s) {
+    var w = new THREE.Mesh(wGeo, bMat); w.position.x = s * 0.04; w.rotation.z = s * -0.25;
+    btBowTie.add(w);
+  });
+  btGroup.add(btBowTie);
+
+  // Neck
+  var neck = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 0.14, 8), matSkin);
+  neck.position.y = BODY_Y + 0.44; btGroup.add(neck);
+
+  // Head
+  btHeadGroup = new THREE.Group();
+  btHeadGroup.position.y = HEAD_Y;
+  btHeadGroup.add(new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 12), matSkin));
+
+  var hairMat = new THREE.MeshPhongMaterial({ color: 0x1a0e05, shininess: 30 });
+  var hair = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMat);
+  hair.position.y = 0.02; btHeadGroup.add(hair);
+  var sGeo = new THREE.SphereGeometry(0.07, 8, 6);
+  [-1, 1].forEach(function(s) {
+    var side = new THREE.Mesh(sGeo, hairMat);
+    side.position.set(s * 0.21, 0.02, 0); side.scale.set(0.6, 1.2, 1);
+    btHeadGroup.add(side);
+  });
+
+  // Eyes
+  var eMat = new THREE.MeshPhongMaterial({ color: 0xffffff, shininess: 80 });
+  var pMat = new THREE.MeshPhongMaterial({ color: 0x1a1a1a });
+  var shMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  var shGeo = new THREE.SphereGeometry(0.008, 6, 4);
+
+  btEyeL = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), eMat);
+  btEyeL.position.set(-0.08, 0.04, 0.19); btHeadGroup.add(btEyeL);
+  btEyeR = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), eMat);
+  btEyeR.position.set(0.08, 0.04, 0.19); btHeadGroup.add(btEyeR);
+
+  btPupilL = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 6), pMat);
+  btPupilL.position.z = 0.028; btEyeL.add(btPupilL);
+  btPupilR = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 6), pMat);
+  btPupilR.position.z = 0.028; btEyeR.add(btPupilR);
+  btPupilL.add(new THREE.Mesh(shGeo, shMat)).position.set(0.008, 0.008, 0.015);
+  btPupilR.add(new THREE.Mesh(shGeo, shMat)).position.set(0.008, 0.008, 0.015);
+
+  // Brows
+  var brMat = new THREE.MeshPhongMaterial({ color: 0x1a0e05 });
+  btBrowL = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.014, 0.018), brMat);
+  btBrowL.position.set(-0.08, 0.09, 0.19); btBrowL.rotation.z = 0.1; btHeadGroup.add(btBrowL);
+  btBrowR = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.014, 0.018), brMat);
+  btBrowR.position.set(0.08, 0.09, 0.19); btBrowR.rotation.z = -0.1; btHeadGroup.add(btBrowR);
+
+  // Nose
+  var nose = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), matSkin);
+  nose.position.set(0, -0.01, 0.21); nose.scale.set(0.85, 0.7, 0.6); btHeadGroup.add(nose);
+
+  // Mustache
+  var muMat = new THREE.MeshPhongMaterial({ color: 0x1a0e05 });
+  var muBar = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.028, 0.02), muMat);
+  muBar.position.set(0, -0.05, 0.19); btHeadGroup.add(muBar);
+  var curlGeo = new THREE.TorusGeometry(0.025, 0.01, 6, 8, Math.PI);
+  [-1, 1].forEach(function(s) {
+    var curl = new THREE.Mesh(curlGeo, muMat);
+    curl.position.set(s * 0.07, -0.05, 0.19); curl.rotation.z = s * Math.PI * 0.5;
+    btHeadGroup.add(curl);
+  });
+
+  // Mouth
+  var smile = new THREE.Mesh(new THREE.TorusGeometry(0.035, 0.006, 4, 8, Math.PI),
+    new THREE.MeshPhongMaterial({ color: 0xcc8877 }));
+  smile.position.set(0, -0.085, 0.18); smile.rotation.x = Math.PI; btHeadGroup.add(smile);
+
+  btGroup.add(btHeadGroup);
+  scene.add(btGroup);
+}
+
+/* ═══════ ARMS & HANDS ═══════ */
+function createArms() {
+  var uGeo = new THREE.CylinderGeometry(0.055, 0.05, 1, 8);
+  var lGeo = new THREE.CylinderGeometry(0.045, 0.04, 1, 8);
+  btArmUpperL = new THREE.Mesh(uGeo, matVest); scene.add(btArmUpperL);
+  btArmUpperR = new THREE.Mesh(uGeo.clone(), matVest); scene.add(btArmUpperR);
+  btArmLowerL = new THREE.Mesh(lGeo, matShirt); scene.add(btArmLowerL);
+  btArmLowerR = new THREE.Mesh(lGeo.clone(), matShirt); scene.add(btArmLowerR);
+}
+function createHands() {
+  btHandL = mkHand(); scene.add(btHandL);
+  btHandR = mkHand(); scene.add(btHandR);
+}
+function mkHand() {
+  var g = new THREE.Group();
+  var palm = new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), matWhite);
+  palm.scale.set(1.1, 0.7, 1.3); g.add(palm);
+  var fGeo = new THREE.CylinderGeometry(0.015, 0.012, 0.055, 5);
+  for (var i = 0; i < 4; i++) {
+    var f = new THREE.Mesh(fGeo, matWhite);
+    f.position.set((i - 1.5) * 0.025, -0.012, 0.05); f.rotation.x = -0.3; g.add(f);
+  }
+  return g;
+}
+
+var _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3();
+function posCyl(mesh, a, b) {
+  _v1.addVectors(a, b).multiplyScalar(0.5); mesh.position.copy(_v1);
+  _v2.subVectors(b, a); mesh.scale.y = _v2.length(); _v2.normalize();
+  var q = new THREE.Quaternion(); q.setFromUnitVectors(new THREE.Vector3(0,1,0), _v2);
+  mesh.quaternion.copy(q);
+}
+function getElbow(sh, hd, sign) {
+  return new THREE.Vector3((sh.x+hd.x)*0.5 + sign*0.1, (sh.y+hd.y)*0.5+0.08, (sh.z+hd.z)*0.5-0.06);
+}
+function updateArms() {
+  if (!btArmUpperL) return;
+  var eL = getElbow(btShoulderL, btHandLPos, -1);
+  posCyl(btArmUpperL, btShoulderL, eL); posCyl(btArmLowerL, eL, btHandLPos);
+  btHandL.position.copy(btHandLPos);
+  var eR = getElbow(btShoulderR, btHandRPos, 1);
+  posCyl(btArmUpperR, btShoulderR, eR); posCyl(btArmLowerR, eR, btHandRPos);
+  btHandR.position.copy(btHandRPos);
+}
+
+/* ═══════ RABBIT LOADER ═══════ */
+function loadRabbit() {
+  if (!THREE.GLTFLoader) return;
+  new THREE.GLTFLoader().load('Models/rabbit.glb', function(gltf) {
+    if (!isSceneReady) return;
+    rabbitModel = gltf.scene;
+    rabbitModel.traverse(function(c) {
+      if (c.isMesh && c.material) {
+        var old = c.material;
+        var nm = new THREE.MeshBasicMaterial({
+          map: old.map || null,
+          color: old.map ? 0xffffff : (old.color || new THREE.Color(0xcccccc)),
+          transparent: old.transparent || false,
+          opacity: old.opacity !== undefined ? old.opacity : 1,
+          side: old.side !== undefined ? old.side : THREE.FrontSide
+        });
+        if (nm.map) nm.map.encoding = THREE.LinearEncoding;
+        c.material = nm;
       }
-      if(bcache[firstId]?.[key]) return bcache[firstId][key];
-    }
-  }
-  // 2차 fallback: data/pilot.json (파일럿 100개)
-  const pilot=await loadPilot();
-  return pilot?.[key]||null;
+    });
+    var box = new THREE.Box3().setFromObject(rabbitModel);
+    var sz = new THREE.Vector3(); box.getSize(sz);
+    var maxDim = Math.max(sz.x, sz.y, sz.z);
+    rabbitScale = 0.9 / maxDim;
+    rabbitModel.scale.set(rabbitScale, rabbitScale, rabbitScale);
+    box.setFromObject(rabbitModel);
+    var center = new THREE.Vector3(); box.getCenter(center);
+    rabbitModel.position.x = RB_X - center.x;
+    rabbitModel.position.y = TABLE_Y + 0.04 - box.min.y;
+    rabbitModel.position.z = RB_Z - center.z;
+    rabbitBaseY = rabbitModel.position.y;
+    rabbitModel.rotation.y = -0.3;
+    scene.add(rabbitModel);
+  });
 }
 
-// ── Typewriter ──
-function typewrite(el,html,isHtml){
-  el.innerHTML='';
-  if(isHtml){
-    // parse to get plain segments with em markers
-    const tmp=document.createElement('div');
-    tmp.innerHTML=html;
-    el.innerHTML=html;
-    el.style.opacity='0';
-    requestAnimationFrame(()=>{
-      el.style.transition='opacity .6s ease';
-      el.style.opacity='1';
+/* ═══════ BOKEH ═══════ */
+function createBokeh() {
+  var geo = new THREE.SphereGeometry(0.04, 6, 4);
+  for (var i = 0; i < 25; i++) {
+    var col = [0xffcc66, 0x8877ff, 0xff8855][i % 3];
+    var mat = new THREE.MeshBasicMaterial({
+      color: col, transparent: true, opacity: 0.06 + Math.random() * 0.1,
+      blending: THREE.AdditiveBlending, depthWrite: false
     });
+    var m = new THREE.Mesh(geo, mat);
+    var x = (Math.random()-0.5)*5, y = 0.8+Math.random()*3.5, z = -3+Math.random()*4;
+    m.position.set(x, y, z);
+    var sc = 0.3+Math.random()*1.2; m.scale.set(sc,sc,sc);
+    scene.add(m);
+    bokehParticles.push({
+      mesh:m, baseY:y, baseX:x,
+      phY:Math.random()*6.28, phX:Math.random()*6.28,
+      spY:0.15+Math.random()*0.25, spX:0.08+Math.random()*0.12,
+      ampY:0.1+Math.random()*0.2, ampX:0.08+Math.random()*0.15
+    });
+  }
+}
+
+/* ═══════ ANIMATION — BARTENDER ═══════ */
+function lv(t, d, sp, dt) {
+  t.x += (d.x-t.x)*Math.min(sp*dt,1);
+  t.y += (d.y-t.y)*Math.min(sp*dt,1);
+  t.z += (d.z-t.z)*Math.min(sp*dt,1);
+}
+
+function animBartender(dt) {
+  // Breathing
+  if (btBody) {
+    var br = Math.sin(animTime)*0.5+0.5;
+    btBody.scale.x = 1+br*0.015; btBody.scale.z = 1+br*0.01;
+    btBody.rotation.z = Math.sin(animTime*0.25)*0.006;
+  }
+  // Blink
+  var bc = animTime % 4.2, bo = 1;
+  if (bc>3.9&&bc<3.98) bo=0.08; else if(bc>4.02&&bc<4.08) bo=0.15;
+  if (btEyeL) btEyeL.scale.y = bo;
+  if (btEyeR) btEyeR.scale.y = bo;
+  // Eye gaze
+  var gx = Math.sin(animTime*0.5)*0.01, gy = Math.sin(animTime*0.38)*0.005;
+  if (btPupilL){btPupilL.position.x=gx;btPupilL.position.y=gy;}
+  if (btPupilR){btPupilR.position.x=gx;btPupilR.position.y=gy;}
+
+  if (btAnimState==='talking') btAnim_talking(dt);
+  else if (btAnimState==='thinking') btAnim_thinking(dt);
+  else if (btAnimState==='surprised') btAnim_surprised(dt);
+  else btAnim_idle(dt);
+
+  updateArms();
+}
+
+function btAnim_idle(dt) {
+  idleTimer+=dt; if(idleTimer>5){idleTimer=0;idleVariant=(idleVariant+1)%3;}
+  var bL=Math.sin(animTime*1.3)*0.03, bR=Math.sin(animTime*1.3+0.7)*0.03;
+  lv(btHandLPos,{x:btHandLRest.x,y:btHandLRest.y+bL,z:btHandLRest.z},5,dt);
+  lv(btHandRPos,{x:btHandRRest.x,y:btHandRRest.y+bR,z:btHandRRest.z},5,dt);
+  if(btHeadGroup){
+    btHeadGroup.rotation.z=Math.sin(animTime*0.5)*0.02*(idleVariant===1?4:1);
+    btHeadGroup.rotation.y=Math.sin(animTime*0.3)*(idleVariant===1?0.06:0.01);
+    btHeadGroup.rotation.x=0;
+  }
+  if(btBrowL) btBrowL.position.y=0.09;
+  if(btBrowR) btBrowR.position.y=0.09;
+}
+
+function btAnim_talking(dt) {
+  if(btHeadGroup){
+    btHeadGroup.rotation.x=Math.sin(animTime*2.5)*0.04;
+    btHeadGroup.rotation.z=Math.sin(animTime*1.8)*0.05;
+    btHeadGroup.rotation.y=Math.sin(animTime*1.2)*0.04;
+  }
+  var g=Math.sin(animTime*2)*0.08;
+  lv(btHandRPos,{x:btHandRRest.x-0.1,y:btHandRRest.y+0.15+g,z:btHandRRest.z-0.1},4,dt);
+  lv(btHandLPos,{x:btHandLRest.x,y:btHandLRest.y+Math.sin(animTime*1.3)*0.02,z:btHandLRest.z},5,dt);
+  if(btBrowL) btBrowL.position.y=0.1;
+  if(btBrowR) btBrowR.position.y=0.1;
+}
+
+function btAnim_thinking(dt) {
+  if(btHeadGroup){
+    btHeadGroup.rotation.x=-0.06+Math.sin(animTime*0.8)*0.02;
+    btHeadGroup.rotation.z=0.08;
+    btHeadGroup.rotation.y=Math.sin(animTime*0.5)*0.03;
+  }
+  lv(btHandRPos,{x:BT_X+0.1,y:HEAD_Y-0.12,z:BT_Z+0.35},3,dt);
+  lv(btHandLPos,{x:btHandLRest.x,y:btHandLRest.y+Math.sin(animTime)*0.02,z:btHandLRest.z},5,dt);
+  if(btEyeL) btEyeL.scale.y=Math.min(btEyeL.scale.y,0.85);
+  if(btEyeR) btEyeR.scale.y=Math.min(btEyeR.scale.y,0.85);
+  if(btBrowL){btBrowL.position.y=0.082;btBrowL.rotation.z=0.15;}
+  if(btBrowR){btBrowR.position.y=0.105;btBrowR.rotation.z=-0.05;}
+}
+
+function btAnim_surprised(dt) {
+  if(btHeadGroup){btHeadGroup.rotation.x=-0.08;btHeadGroup.rotation.z=Math.sin(animTime*4)*0.03;}
+  if(btEyeL) btEyeL.scale.set(1.15,1.15,1);
+  if(btEyeR) btEyeR.scale.set(1.15,1.15,1);
+  if(btBrowL) btBrowL.position.y=0.115;
+  if(btBrowR) btBrowR.position.y=0.115;
+  lv(btHandRPos,{x:btHandRRest.x-0.1,y:btHandRRest.y+0.2,z:btHandRRest.z-0.05},6,dt);
+  lv(btHandLPos,{x:btHandLRest.x+0.1,y:btHandLRest.y+0.15,z:btHandLRest.z-0.05},6,dt);
+}
+
+/* ═══════ ANIMATION — RABBIT ═══════ */
+function animRabbit(dt) {
+  if (!rabbitModel) return;
+  var s = rabbitScale;
+  if (rbAnimState==='talking') {
+    var sq = 1+Math.sin(animTime*8)*0.06;
+    var st = 1+Math.sin(animTime*8+Math.PI)*0.04;
+    rabbitModel.scale.set(s*st, s*sq, s*st);
+    rabbitModel.rotation.y = -0.3+Math.sin(animTime*5)*0.08;
+    rabbitModel.rotation.z = Math.sin(animTime*6.5)*0.06;
+    rabbitModel.position.y = rabbitBaseY+Math.abs(Math.sin(animTime*7))*0.02;
+  } else if (rbAnimState==='excited') {
+    var bounce = Math.abs(Math.sin(animTime*6))*0.06;
+    rabbitModel.position.y = rabbitBaseY+bounce;
+    rabbitModel.rotation.y = -0.3+Math.sin(animTime*4)*0.15;
+    rabbitModel.rotation.z = Math.sin(animTime*5)*0.1;
+    rabbitModel.scale.set(s,s,s);
+  } else {
+    var bob = Math.sin(animTime*1.5)*0.008;
+    rabbitModel.position.y = rabbitBaseY+bob;
+    rabbitModel.rotation.y = -0.3+Math.sin(animTime*0.4)*0.03;
+    rabbitModel.rotation.z = Math.sin(animTime*0.6)*0.015;
+    var bsc = s*(1+Math.sin(animTime*1.5)*0.01);
+    rabbitModel.scale.set(s, bsc, s);
+  }
+}
+
+/* ═══════ ANIMATION — SCENE ═══════ */
+function animScene(dt) {
+  candleFlames.forEach(function(f) {
+    f.mesh.position.y = f.baseY+Math.sin(animTime*8+f.ph)*0.008;
+    var fs = 0.8+Math.sin(animTime*12+f.ph)*0.2;
+    f.mesh.scale.x=fs; f.mesh.scale.z=fs;
+    f.mesh.scale.y = 1.5+Math.sin(animTime*10+f.ph)*0.3;
+  });
+  if (crystalBall) {
+    crystalBall.material.opacity = 0.3+Math.sin(animTime*1.5)*0.1;
+    crystalBall.rotation.y += dt*0.2;
+    if(crystalBall.children[0]){
+      crystalBall.children[0].material.opacity = 0.3+Math.sin(animTime*2)*0.15;
+      crystalBall.children[0].scale.setScalar(1+Math.sin(animTime*1.8)*0.15);
+    }
+  }
+  bokehParticles.forEach(function(p) {
+    p.mesh.position.y = p.baseY+Math.sin(animTime*p.spY+p.phY)*p.ampY;
+    p.mesh.position.x = p.baseX+Math.sin(animTime*p.spX+p.phX)*p.ampX;
+  });
+}
+
+/* ═══════ RENDER LOOP ═══════ */
+function animate() {
+  rafId = requestAnimationFrame(animate);
+  if (!isSceneReady) return;
+  var dt = Math.min(clock.getDelta(), 0.05);
+  animTime += dt;
+  animBartender(dt);
+  animRabbit(dt);
+  animScene(dt);
+  renderer.render(scene, camera);
+}
+
+/* ═══════ DIALOGUE ENGINE ═══════ */
+function initDlgRefs() {
+  $dlg      = document.getElementById('dialogue');
+  $dlgText  = document.getElementById('dlgText');
+  $dlgName  = document.getElementById('dlgName');
+  $dlgIcon  = document.getElementById('dlgIcon');
+  $dlgNext  = document.getElementById('dlgNext');
+  $dlgBox   = document.getElementById('dlgBox');
+  $options  = document.getElementById('options');
+  $topicSel = document.getElementById('topicSelect');
+  $spreadSel= document.getElementById('spreadSelect');
+  $cardArea = document.getElementById('cardArea');
+}
+
+function say(ch, text, opts) {
+  opts = opts || {};
+  dlgQueue.push({ ch:ch, text:text, pause:opts.pause||0, onDone:opts.onDone||null, anim:opts.anim||null });
+  if (!dlgTyping && dlgQueue.length===1) processMsg();
+}
+
+function processMsg() {
+  if (!dlgQueue.length) {
+    dlgTyping = false;
+    if (dlgCallback) { var cb=dlgCallback; dlgCallback=null; cb(); }
     return;
   }
-  // plain text typewriter
-  let i=0;
-  const cursor=document.createElement('span');
-  cursor.className='c-reading-cursor';
-  el.appendChild(cursor);
-  const timer=setInterval(()=>{
-    el.insertBefore(document.createTextNode(html[i]),cursor);
-    i++;
-    if(i>=html.length){
-      clearInterval(timer);
-      setTimeout(()=>cursor.remove(),800);
+  var msg = dlgQueue[0];
+  dlgTyping = true;
+
+  if (msg.ch==='bt') {
+    $dlgIcon.className='dlg-icon bt'; $dlgIcon.textContent='🤵';
+    $dlgName.className='dlg-name'; $dlgName.textContent='바텐더';
+    btAnimState = msg.anim || 'talking'; rbAnimState = 'idle';
+  } else {
+    $dlgIcon.className='dlg-icon rb'; $dlgIcon.textContent='🐰';
+    $dlgName.className='dlg-name rb-name'; $dlgName.textContent='루나';
+    rbAnimState = msg.anim || 'talking'; btAnimState = 'idle';
+  }
+
+  $dlg.classList.add('show');
+  $dlgNext.classList.add('hidden');
+  $dlgText.textContent = '';
+  dlgFullText = msg.text; dlgCharIdx = 0;
+  setTimeout(typeNext, msg.pause || 0);
+}
+
+function typeNext() {
+  if (dlgCharIdx < dlgFullText.length) {
+    dlgCharIdx++;
+    $dlgText.textContent = dlgFullText.substring(0, dlgCharIdx);
+    dlgTypeTimer = setTimeout(typeNext, TYPE_SPEED);
+  } else {
+    $dlgNext.classList.remove('hidden');
+    btAnimState='idle'; rbAnimState='idle';
+  }
+}
+
+function advDlg() {
+  if (dlgTyping && dlgCharIdx<dlgFullText.length) {
+    clearTimeout(dlgTypeTimer);
+    dlgCharIdx=dlgFullText.length;
+    $dlgText.textContent=dlgFullText;
+    $dlgNext.classList.remove('hidden');
+    btAnimState='idle'; rbAnimState='idle';
+    return;
+  }
+  dlgQueue.shift();
+  if (dlgQueue.length) processMsg();
+  else { dlgTyping=false; btAnimState='idle'; rbAnimState='idle'; if(dlgCallback){var cb=dlgCallback;dlgCallback=null;cb();} }
+}
+
+function hideDlg() {
+  $dlg.classList.remove('show'); dlgQueue=[]; dlgTyping=false; clearTimeout(dlgTypeTimer);
+}
+
+function showOpts(opts) {
+  hideDlg();
+  $options.innerHTML='';
+  opts.forEach(function(o) {
+    var btn = document.createElement('button'); btn.className='opt-btn';
+    btn.textContent=o.text;
+    btn.onclick=function(){ $options.classList.remove('show'); o.action(); };
+    $options.appendChild(btn);
+  });
+  setTimeout(function(){$options.classList.add('show');},300);
+}
+
+/* ═══════ TAROT DATA ═══════ */
+function loadCards(cb) {
+  fetch('data/cards/major_arcana.json')
+    .then(function(r){return r.json();})
+    .then(function(d){cardData=d;cb();})
+    .catch(function(){cardData=[];cb();});
+}
+
+function drawCards(n) {
+  drawnCards=[]; var pool=cardData.slice();
+  for(var i=0;i<n;i++){
+    var idx=Math.floor(Math.random()*pool.length);
+    var c=JSON.parse(JSON.stringify(pool[idx]));
+    c.isReversed=Math.random()<0.35;
+    pool.splice(idx,1);
+    drawnCards.push(c);
+  }
+}
+
+function topicKey() {
+  var m={love:'love',career:'career',finance:'finance',today:'love',general:'career'};
+  return m[selectedTopic]||'love';
+}
+
+/* ═══════ REACTION PATTERNS ═══════ */
+var RX_UP = [
+  [{c:'bt',t:'음...'},{c:'rb',t:'...뭐야뭐야?? 뭐가 보여?!'},{c:'bt',t:'...흥미로운 카드입니다.'}],
+  [{c:'rb',t:'우와!! 이 카드!!'},{c:'bt',t:'후후... 이 카드가 나왔군요.'}],
+  [{c:'bt',t:'오...!'},{c:'rb',t:'!! 이 카드 알아! 알아!!'},{c:'bt',t:'...네, 의미 깊은 카드입니다.'}],
+  [{c:'bt',t:'허...'},{c:'rb',t:'어떤 카드야?! 좋은 거야?!'},{c:'bt',t:'...천천히 이야기해 드리겠습니다.'}],
+  [{c:'bt',t:'...이 카드가.'},{c:'bt',t:'......재미있군요.',pause:600},{c:'rb',t:'뭐가 재미있어!! 빨리 알려줘!!'}],
+];
+var RX_REV = [
+  [{c:'bt',t:'...역위치군요.'},{c:'rb',t:'거꾸로다?! 괜찮은 거야?!'},{c:'bt',t:'걱정 마세요. 역위치도 중요한 메시지입니다.'}],
+  [{c:'bt',t:'흠......'},{c:'rb',t:'으... 아저씨 표정이 무서워...'},{c:'bt',t:'...아닙니다. 좀 더 깊이 들여다볼 필요가 있을 뿐입니다.'}],
+  [{c:'bt',t:'역위치... 주의 깊게 봐야겠습니다.'},{c:'rb',t:'무...무서운 건 아니지?!'},{c:'bt',t:'나쁜 카드란 없습니다. 다만 방향이 다를 뿐이지요.'}],
+];
+
+/* ═══════ CARD UI ═══════ */
+function showCards() {
+  $cardArea.innerHTML='';
+  var labels = selectedSpread===3 ? ['과거','현재','미래'] : [''];
+
+  drawnCards.forEach(function(card, idx) {
+    var slot = document.createElement('div');
+    slot.className='card-slot entering';
+    slot.style.animationDelay=(idx*0.2)+'s';
+
+    if(labels[idx]){
+      var pl=document.createElement('div'); pl.className='card-pos-label'; pl.textContent=labels[idx];
+      slot.appendChild(pl);
     }
-  },22);
+
+    var inner = document.createElement('div'); inner.className='card-inner';
+
+    // Back
+    var back = document.createElement('div'); back.className='card-back';
+    var pat = document.createElement('div'); pat.className='card-pattern'; back.appendChild(pat);
+    inner.appendChild(back);
+
+    // Front
+    var front = document.createElement('div');
+    front.className = 'card-front' + (card.isReversed ? ' reversed-front' : '');
+
+    front.innerHTML =
+      '<div class="card-numeral">'+toRoman(card.number)+'</div>'+
+      '<div class="card-name-en">'+card.name_en+'</div>'+
+      '<div class="card-symbol">'+(CARD_SYMBOLS[card.number]||'✦')+'</div>'+
+      '<div class="card-name-kr">'+card.name_kr+'</div>'+
+      '<div class="card-direction '+(card.isReversed?'reversed':'upright')+'">'+(card.isReversed?'역위치 ↺':'정위치 ↑')+'</div>'+
+      '<div class="card-keywords">'+(card.isReversed?card.keywords.reversed:card.keywords.upright).slice(0,3).join(' · ')+'</div>';
+
+    inner.appendChild(front);
+    slot.appendChild(inner);
+
+    slot.onclick = function() {
+      if(slot.classList.contains('flipped')) return;
+      slot.classList.add('flipped');
+      flippedCount++;
+      hideDlg();
+      setTimeout(function(){ playReaction(card); }, 900);
+    };
+
+    $cardArea.appendChild(slot);
+  });
+
+  setTimeout(function(){$cardArea.classList.add('show');},200);
 }
 
-function doReset(){
-  sel=[];orients={};
-  const p2=document.getElementById('p2');
-  p2.classList.remove('on');p2.style.display='none';
-  document.getElementById('p1').style.display='block';
-  initSel();
+function playReaction(card) {
+  var pool = card.isReversed ? RX_REV : RX_UP;
+  var rx = pool[Math.floor(Math.random()*pool.length)];
+  rx.forEach(function(r){ say(r.c, r.t, {pause:r.pause||0}); });
+  dlgCallback = function() {
+    if (flippedCount>=drawnCards.length) setTimeout(startReading, 800);
+  };
 }
 
-// ── Starfield canvas ──
-(function(){
-  const cvs=document.getElementById('cvs');
-  const ctx=cvs.getContext('2d');
-  let stars=[];
-  function resize(){
-    cvs.width=innerWidth;cvs.height=innerHeight;
-    stars=[];
-    const cnt=Math.floor(cvs.width*cvs.height/3500);
-    for(let i=0;i<cnt;i++) stars.push({
-      x:Math.random()*cvs.width,y:Math.random()*cvs.height,
-      r:Math.random()*1.3,a:Math.random(),
-      sp:3e-4+Math.random()*1e-3,ph:Math.random()*Math.PI*2
+function toRoman(n){
+  if(!n) return '0';
+  var v=[10,9,5,4,1],s=['X','IX','V','IV','I'],r='';
+  for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];}
+  return r;
+}
+
+/* ═══════ READING ═══════ */
+function startReading() {
+  hideDlg();
+  $cardArea.classList.remove('show');
+  say('bt','자, 카드가 모두 나왔으니... 이야기를 시작하겠습니다.',{anim:'thinking'});
+  say('rb','두근두근...!!');
+  dlgCallback = function(){ setTimeout(showReadingPanel, 500); };
+}
+
+function showReadingPanel() {
+  hideDlg();
+  var panel = document.getElementById('readingPanel');
+  var cont = document.getElementById('readingContent');
+  cont.innerHTML = '';
+
+  var topicNames={love:'💕 연애운',career:'💼 직업운',finance:'💰 재물운',today:'✨ 오늘의 운세',general:'🔮 종합운'};
+  var title = document.createElement('div'); title.className='reading-title';
+  title.textContent=(topicNames[selectedTopic]||'🔮 타로')+' 리딩';
+  cont.appendChild(title);
+
+  var posNames = selectedSpread===3 ? ['🌙 과거의 흐름','☀️ 현재의 상황','⭐ 미래의 방향'] : ['🔮 당신의 카드'];
+
+  drawnCards.forEach(function(card, i) {
+    var sec = document.createElement('div'); sec.className='reading-card-section';
+
+    var hdr = document.createElement('div'); hdr.className='reading-card-header';
+    hdr.textContent=(CARD_SYMBOLS[card.number]||'✦')+' '+card.name_kr+' ('+card.name_en+') — '+(card.isReversed?'역위치':'정위치');
+    sec.appendChild(hdr);
+
+    if(posNames[i]){ var ps=document.createElement('div');ps.className='reading-card-pos';ps.textContent=posNames[i];sec.appendChild(ps); }
+
+    var interp = document.createElement('div'); interp.className='reading-interp';
+
+    var core = card.isReversed ? card.core_meaning.reversed : card.core_meaning.upright;
+    var p1 = document.createElement('p');
+    p1.innerHTML='<span class="char-label bt-label">🤵 바텐더:</span> "'+core+'"';
+    interp.appendChild(p1);
+
+    var tk = topicKey();
+    if(card.situation_snippets && card.situation_snippets[tk]){
+      var p2 = document.createElement('p');
+      p2.innerHTML='<span class="char-label bt-label">🤵 바텐더:</span> "'+card.situation_snippets[tk]+'"';
+      interp.appendChild(p2);
+    }
+
+    var p3 = document.createElement('p');
+    p3.innerHTML='<span class="char-label rb-label">🐰 루나:</span> "'+lunaReact(card)+'"';
+    interp.appendChild(p3);
+
+    var kws = card.isReversed ? card.keywords.reversed : card.keywords.upright;
+    var p4 = document.createElement('p');
+    p4.style.cssText='font-size:.78rem;color:var(--text-3);margin-top:.3rem';
+    p4.textContent='키워드: '+kws.join(', ');
+    interp.appendChild(p4);
+
+    sec.appendChild(interp);
+    cont.appendChild(sec);
+  });
+
+  // Summary
+  var sum = document.createElement('div'); sum.className='reading-summary';
+  sum.innerHTML =
+    '<div class="reading-summary-title">✦ FINAL MESSAGE ✦</div>'+
+    '<p class="reading-interp"><span class="char-label bt-label">🤵 바텐더:</span> "'+finalBt()+'"</p>'+
+    '<p class="reading-interp" style="margin-top:.5rem"><span class="char-label rb-label">🐰 루나:</span> "'+finalRb()+'"</p>';
+  cont.appendChild(sum);
+
+  panel.classList.add('show');
+  document.getElementById('restartBtn').classList.add('show');
+}
+
+function lunaReact(card) {
+  var up=['우와~! 이 카드 진짜 좋은 거야!! 대박이다!!','좋아좋아~!! 이건 분명 좋은 의미야!!','이 카드 나한테도 나온 적 있어! 엄청 좋았어!!','헤헤~ 좋은 카드다! 기분 좋지 않아?!','우와앙! 이거 보면 기분이 좋아진다~!'];
+  var rev=['으으... 역위치라니... 근데 괜찮아! 나쁜 카드는 없다고 아저씨가 그랬어!','어... 좀 걱정되지만... 이것도 다 의미가 있는 거야!! 힘내!!','역위치... 조금 주의하라는 뜻이야! 충분히 잘 해낼 수 있어!','걱정 마! 역위치는 다른 시각으로 보라는 뜻이래! 난 믿어!!'];
+  var pool = card.isReversed ? rev : up;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function finalBt() {
+  var m=['카드는 길을 비출 뿐, 걸어가는 것은 당신의 몫입니다. 오늘의 메시지가 마음에 작은 등불이 되기를 바랍니다.','운명이란 정해진 길이 아니라, 매 순간의 선택이 만들어가는 이야기입니다. 현명한 선택의 나침반이 되었으면 합니다.','별빛 아래서 비추어진 카드의 메시지를 마음에 새기시되, 최종 결정은 항상 당신의 직관을 따르세요.','타로는 거울과 같습니다. 카드가 보여준 것은 당신의 마음속에 이미 있던 답일지도 모릅니다.','오늘 밤의 별빛이 당신에게 좋은 기운을 전해주기를... 언제든 다시 찾아오세요.'];
+  return m[Math.floor(Math.random()*m.length)];
+}
+
+function finalRb() {
+  var m=['또 보러 와~!! 나 기다리고 있을게!! 다음에는 더 재밌는 카드가 나올지도 몰라!','오늘 타로 재밌었지?! 나도 재밌었어!! 꼭 다시 와!!','힘내!! 루나가 응원한다!! 다음에 또 놀러 와~!!','고마워 와줘서!! 카드가 좋은 길을 알려줬을 거야! 파이팅!!','바이바이~!! 아, 다음에 오면 과자 좀 가져와!! ...농담이야! 헤헤!!'];
+  return m[Math.floor(Math.random()*m.length)];
+}
+
+/* ═══════ GAME FLOW ═══════ */
+function startGame() {
+  initDlgRefs();
+  $dlgBox.addEventListener('click', function(e){ if(!e.target.closest('.opt-btn')) advDlg(); });
+  document.getElementById('readingClose').addEventListener('click',function(){ document.getElementById('readingPanel').classList.remove('show'); });
+  document.getElementById('restartBtn').addEventListener('click', resetGame);
+  playIntro();
+}
+
+function playIntro() {
+  setTimeout(function(){ document.getElementById('introCenter').classList.add('hidden'); }, 2200);
+  setTimeout(function(){
+    document.getElementById('curtainL').classList.add('open');
+    document.getElementById('curtainR').classList.add('open');
+  }, 2800);
+  setTimeout(function(){
+    document.getElementById('intro').style.display='none';
+    document.getElementById('hud').classList.add('show');
+    phaseGreeting();
+  }, 4800);
+}
+
+function phaseGreeting() {
+  say('bt','...어서 오세요.',{pause:500});
+  say('bt','이 밤, 별빛의 인도를 받아 이곳까지 오셨군요.');
+  say('rb','!! 손님이다!! 안녕안녕~!!',{anim:'excited'});
+  say('bt','후후... 이 아이는 제 조수 루나입니다. 소란스럽지만, 눈은 정확하지요.');
+  say('rb','헤헤~ 난 루나! 타로 보는 거 진짜진짜 좋아해!!');
+  say('bt','저는 이곳의 안내인... 밤의 바텐더라고 불러주시면 됩니다.');
+  say('bt','자... 오늘 이 늦은 밤에 찾아오신 건, 분명 이유가 있으시겠지요?');
+  dlgCallback = function(){
+    showOpts([
+      {text:'💭 네, 요즘 고민이 좀 있어서요...', action:respA},
+      {text:'😄 재미삼아 한번 해보려고요!', action:respB},
+      {text:'🤔 타로가 정말 맞는 건가요...?', action:respC}
+    ]);
+  };
+}
+
+function respA(){
+  say('bt','고민이라... 이곳을 찾아오신 것만으로도 이미 첫 걸음을 떼신 겁니다.');
+  say('rb','걱정 마! 카드가 길을 알려줄 거야!',{anim:'excited'});
+  dlgCallback=phaseTopic;
+}
+function respB(){
+  say('bt','후후, 재미라 하셨지만... 카드는 종종 진심을 읽어내곤 하죠.');
+  say('rb','맞아맞아! 재미로 왔다가 깜짝 놀라는 사람 엄청 많아!',{anim:'excited'});
+  dlgCallback=phaseTopic;
+}
+function respC(){
+  say('bt','흥미로운 질문이시군요.',{anim:'thinking'});
+  say('bt','타로는 미래를 \'예언\'하지 않습니다. 다만... 마음 속 이미 알고 있는 답을 비추어 보여줄 뿐이지요.');
+  say('rb','어려운 건 모르겠고... 난 카드가 신기해서 좋아!');
+  dlgCallback=phaseTopic;
+}
+
+function phaseTopic() {
+  say('bt','그렇다면... 오늘은 어떤 이야기를 나눠볼까요?');
+  dlgCallback = function(){
+    hideDlg();
+    $topicSel.innerHTML='';
+    var topics=[
+      {id:'love',icon:'💕',label:'연애운',desc:'사랑과 관계'},
+      {id:'career',icon:'💼',label:'직업운',desc:'일과 성장'},
+      {id:'finance',icon:'💰',label:'재물운',desc:'금전과 풍요'},
+      {id:'today',icon:'✨',label:'오늘의 운세',desc:'오늘 하루의 흐름'},
+      {id:'general',icon:'🔮',label:'종합운',desc:'전체적인 기운'}
+    ];
+    topics.forEach(function(t){
+      var btn=document.createElement('button'); btn.className='sel-btn';
+      btn.innerHTML='<span class="sel-icon">'+t.icon+'</span><div class="sel-label">'+t.label+'</div><div class="sel-desc">'+t.desc+'</div>';
+      btn.onclick=function(){ selectedTopic=t.id; $topicSel.classList.remove('show'); onTopicPicked(t); };
+      $topicSel.appendChild(btn);
     });
-  }
-  function draw(t){
-    ctx.clearRect(0,0,cvs.width,cvs.height);
-    stars.forEach(s=>{
-      const a=s.a*(0.35+0.65*Math.sin(t*s.sp+s.ph));
-      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-      ctx.fillStyle=`rgba(200,205,255,${a})`;ctx.fill();
+    setTimeout(function(){$topicSel.classList.add('show');},300);
+  };
+}
+
+function onTopicPicked(t) {
+  var rr={love:'연애!! 두근두근하는 거~!!',career:'직업!! 열심히 일하는 거!!',finance:'돈돈!! 부자 되는 거!!',today:'오늘 운세!! 궁금궁금!!',general:'종합!! 다 알 수 있어!!'};
+  say('rb', rr[t.id]||'좋아좋아!!', {anim:'excited'});
+  say('bt', '...'+t.label+'이시군요. 좋습니다.');
+  dlgCallback=phaseSpread;
+}
+
+function phaseSpread() {
+  say('bt','카드를 몇 장 뽑으시겠습니까?');
+  say('rb','한 장은 핵심만 딱! 세 장이면 과거-현재-미래! 나는 세 장이 좋아~!');
+  dlgCallback=function(){
+    hideDlg();
+    $spreadSel.innerHTML='';
+    var spreads=[
+      {count:1,icon:'🃏',label:'원카드 리딩',desc:'핵심 메시지 하나'},
+      {count:3,icon:'🃏🃏🃏',label:'쓰리카드 리딩',desc:'과거 · 현재 · 미래'}
+    ];
+    spreads.forEach(function(s){
+      var btn=document.createElement('button'); btn.className='sel-btn';
+      btn.innerHTML='<span class="sel-icon">'+s.icon+'</span><div class="sel-label">'+s.label+'</div><div class="sel-desc">'+s.desc+'</div>';
+      btn.onclick=function(){ selectedSpread=s.count; $spreadSel.classList.remove('show'); onSpreadPicked(); };
+      $spreadSel.appendChild(btn);
     });
-    requestAnimationFrame(draw);
+    setTimeout(function(){$spreadSel.classList.add('show');},300);
+  };
+}
+
+function onSpreadPicked() {
+  say('bt','좋습니다. 마음을 가라앉히시고...',{anim:'thinking',pause:300});
+  say('bt','카드를 선택해 주세요. 끌리는 카드를 눌러 뒤집으시면 됩니다.');
+  say('rb','집중집중~!! 좋은 카드가 나올 거야!!');
+  dlgCallback=function(){
+    hideDlg();
+    flippedCount=0;
+    drawCards(selectedSpread);
+    showCards();
+  };
+}
+
+function resetGame() {
+  document.getElementById('readingPanel').classList.remove('show');
+  document.getElementById('restartBtn').classList.remove('show');
+  $cardArea.classList.remove('show');
+  $cardArea.innerHTML='';
+  hideDlg();
+  drawnCards=[]; flippedCount=0; selectedTopic=''; selectedSpread=1;
+  btAnimState='idle'; rbAnimState='idle';
+  setTimeout(function(){
+    say('bt','다시 오셨군요... 환영합니다.');
+    say('rb','또 왔다~!! 이번엔 어떤 카드가 나올까?!',{anim:'excited'});
+    dlgCallback=phaseTopic;
+  },500);
+}
+
+/* ═══════ STARS ═══════ */
+function createStars() {
+  var c=document.getElementById('stars');
+  for(var i=0;i<40;i++){
+    var s=document.createElement('div'); s.className='star';
+    s.style.left=Math.random()*100+'%'; s.style.top=Math.random()*100+'%';
+    s.style.setProperty('--dur',(3+Math.random()*4)+'s');
+    s.style.setProperty('--delay',(Math.random()*5)+'s');
+    s.style.setProperty('--bright',(0.3+Math.random()*0.5)+'');
+    var sz=1+Math.random()*3; s.style.width=sz+'px'; s.style.height=sz+'px';
+    c.appendChild(s);
   }
-  resize();
-  window.addEventListener('resize',resize);
-  requestAnimationFrame(draw);
+}
+
+/* ═══════ INIT ═══════ */
+function init() {
+  createStars();
+  loadCards(function(){
+    initThree(function(){
+      setupScene();
+      setTimeout(function(){
+        document.getElementById('loader').classList.add('hidden');
+        startGame();
+      }, 1200);
+    });
+  });
+}
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init);
+else init();
+
 })();
-
-// ── Viewer ──
-async function toggleViewer(){
-  const v=document.getElementById('vwr');
-  if(v.classList.contains('on')){v.classList.remove('on');return;}
-  v.classList.add('on');
-  try{
-    if(!idata){const r=await fetch('web/index.json');if(!r.ok)throw 0;idata=await r.json();}
-    const bc=Object.keys(idata.buckets).length;
-    document.getElementById('vstats').innerHTML=`
-      <div class="vstat"><div class="n">${idata.total||0}</div><div class="l">총 해석 텍스트</div></div>
-      <div class="vstat"><div class="n">${bc}</div><div class="l">버킷 수</div></div>
-      <div class="vstat"><div class="n">v${idata.version||'?'}</div><div class="l">버전</div></div>`;
-    const fid=Object.keys(idata.buckets)[0];
-    const sa=document.getElementById('vsamps');
-    sa.innerHTML='<h3 style="color:var(--text-2);margin-bottom:1rem;font-size:.88rem">샘플 데이터</h3>';
-    if(fid){
-      const info=idata.buckets[fid];
-      const r2=await fetch(`web/buckets/${info.file}`);
-      if(r2.ok){
-        const d=await r2.json();
-        Object.keys(d).slice(0,5).forEach(k=>{
-          const v=d[k];
-          const pts=k.replace('_ur','').split('_');
-          const ns=[];for(let i=0;i<pts.length;i+=2){const id=`${pts[i]}_${pts[i+1]}`;const c=CD.find(c=>c.id===id);ns.push(c?c.name:id);}
-          sa.innerHTML+=`<div class="vsamp"><h4>${ns.join(' → ')}</h4><p><span class="vl">과거:</span> ${v.past}</p><p><span class="vl">현재:</span> ${v.present}</p><p><span class="vl">미래:</span> ${v.future}</p><p><span class="vl">시너지:</span> ${v.synergy}</p></div>`;
-        });
-      }
-    }
-  } catch(e){
-    document.getElementById('vstats').innerHTML='<div class="vstat"><div class="n">—</div><div class="l">데이터 없음 (shard.py 실행 후 확인)</div></div>';
-  }
-}
 </script>
 </body>
 </html>
