@@ -135,6 +135,25 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .card-slot.entering{animation:cardEnter .6s cubic-bezier(.4,0,.2,1) both}
 @keyframes cardEnter{from{opacity:0;transform:translateY(80px) rotateX(30deg)}to{opacity:1;transform:translateY(0) rotateX(0)}}
 
+/* ===== CARD SPOTLIGHT ===== */
+#cardSpotlight{position:fixed;top:50%;left:50%;transform:translate(-50%,-58%);z-index:58;opacity:0;pointer-events:none;transition:opacity .6s cubic-bezier(.4,0,.2,1)}
+#cardSpotlight.show{opacity:1}
+.spotlight-card{width:160px;height:260px;background:linear-gradient(180deg,#0d0520 0%,#1a0a3e 50%,#0d0520 100%);border:2px solid var(--gold);border-radius:12px;padding:1rem .8rem;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;box-shadow:0 0 40px rgba(201,168,76,.3),0 0 80px rgba(201,168,76,.1);animation:spotlightAppear .6s ease-out,spotlightGlow 2s ease-in-out .6s infinite;position:relative}
+.spotlight-card::before{content:'';position:absolute;inset:6px;border:1px solid rgba(201,168,76,.25);border-radius:8px;pointer-events:none}
+.spotlight-card.reversed{transform:rotate(180deg)}
+.spotlight-card .card-numeral{font-family:'Cinzel',serif;font-size:.65rem;color:var(--gold-lo);letter-spacing:.2em}
+.spotlight-card .card-name-en{font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold);letter-spacing:.1em;margin-top:.1rem}
+.spotlight-card .card-name-kr{font-family:'Noto Serif KR',serif;font-size:1.05rem;color:var(--text);font-weight:600;margin:.15rem 0}
+.spotlight-card .card-symbol{font-size:2rem;margin:.1rem 0;filter:drop-shadow(0 0 8px rgba(201,168,76,.4))}
+.spotlight-card .card-direction{font-size:.6rem;padding:.12rem .4rem;border-radius:20px;margin-top:.1rem}
+.spotlight-card .card-direction.upright{color:var(--gold);background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.2)}
+.spotlight-card .card-direction.reversed{color:var(--red-soft);background:rgba(207,102,85,.12);border:1px solid rgba(207,102,85,.2)}
+.spotlight-card .card-keywords{font-size:.5rem;color:var(--text-2);line-height:1.3;margin-top:.1rem}
+@keyframes spotlightAppear{from{opacity:0;transform:scale(.7) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes spotlightGlow{0%,100%{box-shadow:0 0 30px rgba(201,168,76,.25),0 0 60px rgba(201,168,76,.1)}50%{box-shadow:0 0 50px rgba(201,168,76,.4),0 0 100px rgba(201,168,76,.15)}}
+.card-slot.card-locked{opacity:.45;pointer-events:none;filter:brightness(.6)}
+.card-slot.card-locked:hover{transform:none}
+
 /* ===== READING PANEL ===== */
 #readingPanel{position:fixed;top:0;bottom:0;right:0;width:min(420px,90vw);z-index:70;background:var(--surface);border-left:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transform:translateX(100%);transition:transform .6s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:2rem 1.5rem}
 #readingPanel.show{transform:translateX(0)}
@@ -182,11 +201,18 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   .sel-btn{min-width:100px;padding:.8rem 1rem}
   #cardArea{gap:.7rem}
   #readingPanel{width:100vw}
+  .spotlight-card{width:130px;height:210px;padding:.8rem .6rem}
+  .spotlight-card .card-symbol{font-size:1.6rem}
+  .spotlight-card .card-name-kr{font-size:.9rem}
+  #cardSpotlight{transform:translate(-50%,-62%)}
 }
 @media(max-width:380px){
   .card-slot{width:85px;height:140px}
   .card-name-kr{font-size:.75rem}
   .card-symbol{font-size:1.3rem}
+  .spotlight-card{width:110px;height:180px;padding:.6rem .5rem}
+  .spotlight-card .card-symbol{font-size:1.3rem}
+  .spotlight-card .card-name-kr{font-size:.78rem}
   .sel-btn{min-width:85px;padding:.6rem .8rem}
   .sel-btn .sel-icon{font-size:1.2rem}
 }
@@ -243,6 +269,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 <div class="select-panel" id="topicSelect"></div>
 <div class="select-panel" id="spreadSelect"></div>
 <div id="cardArea"></div>
+<div id="cardSpotlight"></div>
 
 <div id="readingPanel">
   <button class="reading-close" id="readingClose">✕</button>
@@ -1089,6 +1116,9 @@ function showCards() {
     slot.className='card-slot entering';
     slot.style.animationDelay=(idx*0.2)+'s';
 
+    // Lock all cards except the first one (sequential flipping)
+    if (idx > 0) slot.classList.add('card-locked');
+
     if(labels[idx]){
       var pl=document.createElement('div'); pl.className='card-pos-label'; pl.textContent=labels[idx];
       slot.appendChild(pl);
@@ -1117,11 +1147,11 @@ function showCards() {
     slot.appendChild(inner);
 
     slot.onclick = function() {
-      if(slot.classList.contains('flipped')) return;
+      if(slot.classList.contains('flipped') || slot.classList.contains('card-locked')) return;
       slot.classList.add('flipped');
       flippedCount++;
       hideDlg();
-      setTimeout(function(){ playReaction(card); }, 900);
+      setTimeout(function(){ playReactionAndRead(card, idx); }, 900);
     };
 
     $cardArea.appendChild(slot);
@@ -1130,7 +1160,30 @@ function showCards() {
   setTimeout(function(){$cardArea.classList.add('show');},200);
 }
 
-function playReaction(card) {
+/* ═══════ CARD SPOTLIGHT ═══════ */
+function showCardSpotlight(card) {
+  var spot = document.getElementById('cardSpotlight');
+  if (!spot) return;
+  var isR = card.isReversed;
+  spot.innerHTML =
+    '<div class="spotlight-card'+(isR?' reversed':'')+'">' +
+    '<div class="card-numeral">'+toRoman(card.number)+'</div>'+
+    '<div class="card-name-en">'+card.name_en+'</div>'+
+    '<div class="card-symbol">'+(CARD_SYMBOLS[card.number]||'✦')+'</div>'+
+    '<div class="card-name-kr">'+card.name_kr+'</div>'+
+    '<div class="card-direction '+(isR?'reversed':'upright')+'">'+(isR?'역위치 ↺':'정위치 ↑')+'</div>'+
+    '<div class="card-keywords">'+(isR?card.keywords.reversed:card.keywords.upright).slice(0,3).join(' · ')+'</div>'+
+    '</div>';
+  spot.classList.add('show');
+}
+
+function hideCardSpotlight() {
+  var spot = document.getElementById('cardSpotlight');
+  if (spot) spot.classList.remove('show');
+}
+
+/* ═══════ PER-CARD REACTION + READING ═══════ */
+function playReactionAndRead(card, idx) {
   var pool;
   if (selectedChar === 'bt') {
     pool = card.isReversed ? RX_BT_REV : RX_BT_UP;
@@ -1139,8 +1192,54 @@ function playReaction(card) {
   }
   var rx = pool[Math.floor(Math.random()*pool.length)];
   rx.forEach(function(r){ say(r.c, r.t, {pause:r.pause||0}); });
+
+  // After reaction dialogue, show spotlight and deliver this card's reading
   dlgCallback = function() {
-    if (flippedCount>=drawnCards.length) setTimeout(startReading, 800);
+    // Hide card area, show spotlight
+    $cardArea.classList.remove('show');
+    showCardSpotlight(card);
+
+    // Deliver this card's reading lines
+    var cardReading = storedReadings.cards[idx];
+    var ch = selectedChar;
+    cardReading.lines.forEach(function(line) {
+      say(ch, line);
+    });
+
+    // After reading, hide spotlight and proceed
+    dlgCallback = function() {
+      hideCardSpotlight();
+
+      if (flippedCount < drawnCards.length) {
+        // More cards to flip — show card area and unlock next card
+        $cardArea.classList.add('show');
+        var slots = $cardArea.querySelectorAll('.card-slot');
+        if (slots[flippedCount]) slots[flippedCount].classList.remove('card-locked');
+
+        // Prompt to flip next card
+        if (ch === 'bt') {
+          say('bt', pick([
+            '...자, 다음 카드를 뒤집어 주세요.',
+            '...이어서, 다음 카드를 선택해 주세요.',
+            '...그럼, 다음 카드를 눌러주세요.'
+          ]));
+        } else {
+          say('rb', pick([
+            '자~ 다음 카드를 뒤집어봐!',
+            '다음 카드를 눌러봐~ 깡총!',
+            '다음 카드가 기다리고 있어!'
+          ]));
+        }
+        dlgCallback = function() { hideDlg(); };
+      } else {
+        // All cards read — proceed to synopsis or final
+        if (storedReadings.synopsis) {
+          deliverSynopsis();
+        } else {
+          deliverFinalMessage();
+        }
+      }
+    };
   };
 }
 
@@ -1149,74 +1248,6 @@ function toRoman(n){
   var v=[10,9,5,4,1],s=['X','IX','V','IV','I'],r='';
   for(var i=0;i<v.length;i++) while(n>=v[i]){r+=s[i];n-=v[i];}
   return r;
-}
-
-/* ═══════ READING — DIALOGUE-BASED DELIVERY ═══════ */
-function startReading() {
-  hideDlg();
-  $cardArea.classList.remove('show');
-
-  // Generate all reading content
-  storedReadings = generateAllReadings();
-
-  // Opening line
-  if (selectedChar === 'bt') {
-    say('bt', pick([
-      '자, 카드가 모두 나왔으니... 하나하나 이야기를 풀어보겠습니다.',
-      '모든 카드가 놓였습니다. 이야기를 시작하지요.',
-      '카드가 다 열렸군요... 그럼, 읽어보겠습니다.'
-    ]), {anim:'thinking'});
-  } else {
-    say('rb', pick([
-      '카드가 다 나왔어~ 자, 하나씩 천천히 읽어볼게, 깡총!',
-      '다 나왔네~ 어디 보자... 하나씩 들여다볼게!',
-      '카드가 모두 열렸어! 자~ 이야기를 풀어볼까~'
-    ]), {anim:'talking'});
-  }
-
-  dlgCallback = function() { deliverCardReading(0); };
-}
-
-function deliverCardReading(cardIdx) {
-  if (cardIdx >= storedReadings.cards.length) {
-    if (storedReadings.synopsis) {
-      deliverSynopsis();
-    } else {
-      deliverFinalMessage();
-    }
-    return;
-  }
-
-  var cardReading = storedReadings.cards[cardIdx];
-  var ch = selectedChar;
-
-  // Transition between cards
-  if (cardIdx > 0) {
-    if (ch === 'bt') {
-      say('bt', pick([
-        '......다음 카드를 보겠습니다.',
-        '...이어서, 다음 카드입니다.',
-        '...그럼, 다음 카드로 넘어가 볼까요.',
-        '......자, 이제 다음 카드를 보시죠.',
-        '...다음 카드가 무엇을 말하고 있는지 보겠습니다.'
-      ]), {anim:'thinking', pause:400});
-    } else {
-      say('rb', pick([
-        '...좋아~ 다음 카드!',
-        '...다음 카드로 가볼까~',
-        '...자, 그 다음은~',
-        '...다음 카드를 봐보자!',
-        '...다음 카드가 뭐라고 하는지 보자, 깡총~'
-      ]), {pause:300});
-    }
-  }
-
-  // Deliver each line
-  cardReading.lines.forEach(function(line) {
-    say(ch, line);
-  });
-
-  dlgCallback = function() { deliverCardReading(cardIdx + 1); };
 }
 
 function deliverSynopsis() {
@@ -1287,12 +1318,17 @@ function showReplayOptions() {
 }
 
 function replayCard(idx) {
+  var card = drawnCards[idx];
   var cardReading = storedReadings.cards[idx];
   var ch = selectedChar;
+  showCardSpotlight(card);
   cardReading.lines.forEach(function(line) {
     say(ch, line);
   });
-  dlgCallback = showReplayOptions;
+  dlgCallback = function() {
+    hideCardSpotlight();
+    showReplayOptions();
+  };
 }
 
 function replaySynopsis() {
@@ -1733,6 +1769,7 @@ function onSpreadPicked() {
     hideDlg();
     flippedCount=0;
     drawCards(selectedSpread);
+    storedReadings = generateAllReadings();
     showCards();
   };
 }
@@ -1742,6 +1779,7 @@ function resetGame() {
   document.getElementById('restartBtn').classList.remove('show');
   $cardArea.classList.remove('show');
   $cardArea.innerHTML='';
+  hideCardSpotlight();
   hideDlg();
   drawnCards=[]; flippedCount=0; selectedTopic=''; selectedSpread=1;
   btAnimState='idle'; rbAnimState='idle'; storedReadings=null;
