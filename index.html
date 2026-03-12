@@ -105,7 +105,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sel-btn .sel-desc{font-size:.7rem;color:var(--text-2);margin-top:.2rem}
 
 /* ===== CARD AREA ===== */
-#cardArea{position:fixed;top:50%;left:50%;transform:translate(-50%,-55%);z-index:55;display:flex;gap:1.2rem;opacity:0;transition:all .6s;pointer-events:none}
+#cardArea{position:fixed;top:50%;left:50%;transform:translate(-50%,-55%);z-index:55;display:flex;flex-wrap:wrap;justify-content:center;gap:1.2rem;opacity:0;transition:all .6s;pointer-events:none;max-width:90vw}
 #cardArea.show{opacity:1;pointer-events:auto}
 .card-slot{width:130px;height:210px;perspective:1000px;cursor:pointer;transition:transform .3s;position:relative}
 .card-slot:hover:not(.flipped){transform:translateY(-8px)}
@@ -151,6 +151,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 @keyframes spotlightGlow{0%,100%{box-shadow:0 0 30px rgba(201,168,76,.25),0 0 60px rgba(201,168,76,.1)}50%{box-shadow:0 0 50px rgba(201,168,76,.4),0 0 100px rgba(201,168,76,.15)}}
 .card-slot.card-locked{opacity:.45;pointer-events:none;filter:brightness(.6)}
 .card-slot.card-locked:hover{transform:none}
+
+/* ===== CANDIDATE SELECTION ===== */
+.card-slot.candidate-selected{transform:translateY(-18px);filter:brightness(1.1)}
+.card-slot.candidate-selected .card-back{border-color:var(--gold);box-shadow:0 0 24px rgba(201,168,76,.45),0 4px 20px rgba(0,0,0,.4)}
+.card-slot.candidate-selected .card-back::after{opacity:1;text-shadow:0 0 30px rgba(201,168,76,.8)}
+.card-slot.candidate-rejected{opacity:0;transform:scale(.7) translateY(30px);transition:all .6s cubic-bezier(.4,0,.2,1);pointer-events:none}
+.candidate-order{position:absolute;top:-14px;right:-10px;width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.8rem;font-weight:700;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.4);animation:badgePop .3s cubic-bezier(.3,1.5,.7,1) both}
+@keyframes badgePop{from{transform:scale(0)}to{transform:scale(1)}}
 
 /* ===== READING PANEL ===== */
 #readingPanel{position:fixed;top:0;bottom:0;right:0;width:min(420px,90vw);z-index:70;background:var(--surface);border-left:1px solid var(--border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);transform:translateX(100%);transition:transform .6s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:2rem 1.5rem}
@@ -417,6 +425,7 @@ var cardData = [];
 var selectedTopic = '', selectedSpread = 1;
 var drawnCards = [], flippedCount = 0;
 var storedReadings = null;
+var candidateCards = [], selectedCardIndices = [];
 // 카드 리딩 진행 중 플래그 — true인 동안 카드 클릭 차단하여 dlgCallback 경쟁 조건 방지
 var isReadingInProgress = false;
 
@@ -1071,6 +1080,114 @@ function drawCards(n) {
     pool.splice(idx,1);
     drawnCards.push(c);
   }
+}
+
+/* ═══════ 5-CARD CANDIDATE SELECTION ═══════ */
+function drawCandidates() {
+  candidateCards=[]; selectedCardIndices=[]; var pool=cardData.slice();
+  for(var i=0;i<5;i++){
+    var idx=Math.floor(Math.random()*pool.length);
+    var c=JSON.parse(JSON.stringify(pool[idx]));
+    c.isReversed=Math.random()<0.35;
+    pool.splice(idx,1);
+    candidateCards.push(c);
+  }
+}
+
+function showCandidateCards() {
+  $cardArea.innerHTML='';
+  candidateCards.forEach(function(card, idx) {
+    var slot=document.createElement('div');
+    slot.className='card-slot entering';
+    slot.style.animationDelay=(idx*0.12)+'s';
+
+    var inner=document.createElement('div'); inner.className='card-inner';
+    var back=document.createElement('div'); back.className='card-back';
+    var pat=document.createElement('div'); pat.className='card-pattern';
+    back.appendChild(pat); inner.appendChild(back);
+
+    var front=document.createElement('div');
+    front.className='card-front'+(card.isReversed?' reversed-front':'');
+    front.innerHTML=
+      '<div class="card-numeral">'+toRoman(card.number)+'</div>'+
+      '<div class="card-name-en">'+card.name_en+'</div>'+
+      '<div class="card-symbol">'+(CARD_SYMBOLS[card.number]||'✦')+'</div>'+
+      '<div class="card-name-kr">'+card.name_kr+'</div>'+
+      '<div class="card-direction '+(card.isReversed?'reversed':'upright')+'">'+(card.isReversed?'역위치 ↺':'정위치 ↑')+'</div>'+
+      '<div class="card-keywords">'+(card.isReversed?card.keywords.reversed:card.keywords.upright).slice(0,3).join(' · ')+'</div>';
+    inner.appendChild(front);
+    slot.appendChild(inner);
+
+    (function(i){
+      slot.onclick=function(){ onCandidateClicked(i); };
+    })(idx);
+
+    $cardArea.appendChild(slot);
+  });
+  setTimeout(function(){$cardArea.classList.add('show');},200);
+}
+
+function onCandidateClicked(idx) {
+  if(isReadingInProgress) return;
+  var slots=$cardArea.querySelectorAll('.card-slot');
+  var slot=slots[idx];
+  if(!slot) return;
+
+  var pos=selectedCardIndices.indexOf(idx);
+  if(pos!==-1) {
+    // deselect
+    selectedCardIndices.splice(pos,1);
+    slot.classList.remove('candidate-selected');
+    var badge=slot.querySelector('.candidate-order');
+    if(badge) badge.remove();
+    // re-number remaining badges
+    selectedCardIndices.forEach(function(ci,i){
+      var b=slots[ci].querySelector('.candidate-order');
+      if(b) b.textContent=i+1;
+    });
+    return;
+  }
+
+  if(selectedCardIndices.length>=selectedSpread) return;
+
+  selectedCardIndices.push(idx);
+  slot.classList.add('candidate-selected');
+
+  if(selectedSpread===3){
+    var num=document.createElement('div');
+    num.className='candidate-order';
+    num.textContent=selectedCardIndices.length;
+    slot.appendChild(num);
+  }
+
+  if(selectedCardIndices.length===selectedSpread){
+    finalizeCandidateSelection();
+  }
+}
+
+function finalizeCandidateSelection() {
+  isReadingInProgress=true;
+  var slots=$cardArea.querySelectorAll('.card-slot');
+
+  // reject unselected
+  slots.forEach(function(slot,idx){
+    if(selectedCardIndices.indexOf(idx)===-1){
+      slot.classList.add('candidate-rejected');
+    }
+  });
+
+  // build drawnCards in selection order
+  drawnCards=[];
+  selectedCardIndices.forEach(function(ci){
+    drawnCards.push(candidateCards[ci]);
+  });
+
+  setTimeout(function(){
+    isReadingInProgress=false;
+    flippedCount=0;
+    storedReadings=generateAllReadings();
+    showCards();
+  },800);
 }
 
 function topicKey() {
@@ -1981,6 +2098,7 @@ function phaseSpread() {
 }
 
 function onSpreadPicked() {
+  var pickN = selectedSpread === 1 ? '한 장' : '세 장';
   if (selectedChar==='bt') {
     say('bt', pick([
       '좋습니다. 마음을 가라앉히시고...',
@@ -1990,27 +2108,26 @@ function onSpreadPicked() {
       '좋습니다. 천천히 심호흡을 한번 하시고...'
     ]), {anim:'thinking', pause:300});
     say('bt', pick([
-      '카드를 선택해 주세요. 끌리는 카드를 눌러 뒤집으시면 됩니다.',
-      '자... 직감이 이끄는 카드를 눌러주세요.',
-      '마음이 가는 카드를 선택해 주세요. 카드가 당신을 부를 겁니다.',
-      '끌리는 카드가 있을 겁니다. 그 카드를 눌러 뒤집어 주세요.',
-      '준비가 되셨다면... 카드를 선택해 주세요. 직감을 믿으시면 됩니다.'
+      '다섯 장의 카드를 놓겠습니다. 그 중 끌리는 ' + pickN + '을 골라주세요.',
+      '자... 다섯 장 중에서 직감이 이끄는 ' + pickN + '을 선택해 주세요.',
+      '다섯 장이 놓일 겁니다. 마음이 가는 ' + pickN + '을 눌러주세요.',
+      '다섯 장 중 ' + pickN + '... 끌리는 카드가 있을 겁니다. 직감을 믿으세요.',
+      '준비가 되셨다면... 다섯 장 중에서 ' + pickN + '을 골라주세요.'
     ]));
   } else {
     say('rb', pick([
-      '자, 마음을 살짝 가라앉히고... 끌리는 카드를 눌러봐. 코끝이 이끄는 대로.',
-      '심호흡 한번 하고, 마음이 가는 카드를 눌러봐.',
-      '자, 눈 감았다 떠봐. 그리고 제일 먼저 눈이 가는 카드를 골라.',
-      '마음을 살짝 비우고... 끌리는 카드를 골라봐. 직감을 믿어.',
-      '준비됐어? 그럼 카드를 골라봐. 네 손이 가는 대로.'
+      '자, 마음을 살짝 가라앉히고... 다섯 장 중에서 끌리는 ' + pickN + '을 골라봐.',
+      '심호흡 한번 하고, 다섯 장 중에서 마음이 가는 ' + pickN + '을 눌러봐.',
+      '자, 눈 감았다 떠봐. 다섯 장이 놓일 거야. 끌리는 ' + pickN + '을 골라.',
+      '다섯 장을 놓을게. 마음을 살짝 비우고... 직감이 가는 ' + pickN + '을 골라봐.',
+      '준비됐어? 다섯 장 중에서 ' + pickN + '을 골라봐. 네 손이 가는 대로.'
     ]), {anim:'talking'});
   }
   dlgCallback=function(){
     hideDlg();
     flippedCount=0;
-    drawCards(selectedSpread);
-    storedReadings = generateAllReadings();
-    showCards();
+    drawCandidates();
+    showCandidateCards();
   };
 }
 
@@ -2022,6 +2139,7 @@ function resetGame() {
   hideCardSpotlight();
   hideDlg();
   drawnCards=[]; flippedCount=0; selectedTopic=''; selectedSpread=1;
+  candidateCards=[]; selectedCardIndices=[];
   btAnimState='idle'; rbAnimState='idle'; storedReadings=null; isReadingInProgress=false;
   // Show character select again
   document.getElementById('charSelect').classList.add('show');
