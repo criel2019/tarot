@@ -1068,15 +1068,15 @@ var RX_BT_REV = [
   [{c:'bt',t:'역위치...',pause:300},{c:'bt',t:'방향이 다를 뿐입니다. 주의 깊게 읽어보겠습니다.'}],
 ];
 var RX_RB_UP = [
-  [{c:'rb',t:'이 카드구나...',pause:400},{c:'rb',t:'후후, 좋은 에너지가 느껴져.'}],
-  [{c:'rb',t:'어...'},{c:'rb',t:'있잖아, 이 카드가 널 골랐어. 인연이 느껴진다.'}],
-  [{c:'rb',t:'......'},{c:'rb',t:'이 카드, 하고 싶은 말이 많은 것 같아. 천천히 읽어볼게.'}],
-  [{c:'rb',t:'오...',pause:300},{c:'rb',t:'흥미로운 카드가 나왔네. 잠깐, 잘 들여다볼게.'}],
+  [{c:'rb',t:'이 카드구나~',pause:400},{c:'rb',t:'후후, 좋은 에너지가 느껴져!'}],
+  [{c:'rb',t:'어...!'},{c:'rb',t:'있잖아~ 이 카드가 널 골랐어. 인연이 느껴진다, 깡총!'}],
+  [{c:'rb',t:'......'},{c:'rb',t:'이 카드, 하고 싶은 말이 많은 것 같아~ 천천히 읽어볼게!'}],
+  [{c:'rb',t:'오~!',pause:300},{c:'rb',t:'흥미로운 카드가 나왔어! 잠깐, 잘 들여다볼게~'}],
 ];
 var RX_RB_REV = [
-  [{c:'rb',t:'거꾸로 나왔네...',pause:400},{c:'rb',t:'괜찮아, 역위치는 다른 각도에서 보라는 뜻이야. 나쁜 게 아니야.'}],
-  [{c:'rb',t:'음...'},{c:'rb',t:'역위치구나. 이 에너지가 좀 다른 방향으로 흐르고 있나 봐. 자세히 봐볼게.'}],
-  [{c:'rb',t:'......',pause:300},{c:'rb',t:'거꾸로 온 카드는 "여기를 좀 봐줘"라는 신호야. 겁먹지 않아도 돼.'}],
+  [{c:'rb',t:'거꾸로 나왔네~',pause:400},{c:'rb',t:'괜찮아~ 역위치는 다른 각도에서 보라는 뜻이야. 나쁜 게 아니거든!'}],
+  [{c:'rb',t:'음~...'},{c:'rb',t:'역위치구나~ 이 에너지가 좀 다른 방향으로 흐르고 있나 봐. 자세히 봐볼게!'}],
+  [{c:'rb',t:'......',pause:300},{c:'rb',t:'거꾸로 온 카드는 "여기 좀 봐줘~"라는 신호야. 겁먹지 않아도 돼, 깡총!'}],
 ];
 
 /* ═══════ CARD UI ═══════ */
@@ -1168,9 +1168,9 @@ function startReading() {
     ]), {anim:'thinking'});
   } else {
     say('rb', pick([
-      '카드가 다 나왔어. 자, 하나씩 천천히 읽어볼게.',
-      '다 나왔네. 어디 보자... 하나씩 들여다볼게.',
-      '카드가 모두 열렸어. 자, 이야기를 풀어볼까.'
+      '카드가 다 나왔어~ 자, 하나씩 천천히 읽어볼게, 깡총!',
+      '다 나왔네~ 어디 보자... 하나씩 들여다볼게!',
+      '카드가 모두 열렸어! 자~ 이야기를 풀어볼까~'
     ]), {anim:'talking'});
   }
 
@@ -1202,11 +1202,11 @@ function deliverCardReading(cardIdx) {
       ]), {anim:'thinking', pause:400});
     } else {
       say('rb', pick([
-        '...좋아, 다음 카드.',
-        '...다음 카드로 가볼까.',
-        '...자, 그 다음은.',
-        '...다음 카드를 봐보자.',
-        '...다음 카드가 뭐라고 하는지 보자.'
+        '...좋아~ 다음 카드!',
+        '...다음 카드로 가볼까~',
+        '...자, 그 다음은~',
+        '...다음 카드를 봐보자!',
+        '...다음 카드가 뭐라고 하는지 보자, 깡총~'
       ]), {pause:300});
     }
   }
@@ -1229,9 +1229,9 @@ function deliverSynopsis() {
     ]), {anim:'thinking', pause:500});
   } else {
     say('rb', pick([
-      '...있잖아, 세 카드를 같이 보면 이야기가 하나로 이어져.',
-      '...자, 이제 세 카드를 연결해볼게. 하나의 흐름이 보여.',
-      '...각각도 의미 있지만, 셋을 같이 보면 네 이야기가 더 선명해져.'
+      '...있잖아~ 세 카드를 같이 보면 이야기가 하나로 이어지거든!',
+      '...자~ 이제 세 카드를 연결해볼게. 하나의 흐름이 보여!',
+      '...각각도 의미 있지만, 셋을 같이 보면 네 이야기가 더 선명해져, 깡총~'
     ]), {pause:400});
   }
 
@@ -1279,7 +1279,7 @@ function showReplayOptions() {
   if (selectedChar === 'bt') {
     say('bt', '...혹시 다시 듣고 싶은 부분이 있으시다면, 말씀해 주세요.');
   } else {
-    say('rb', '다시 듣고 싶은 부분이 있으면 골라봐.');
+    say('rb', '다시 듣고 싶은 부분이 있으면 골라봐~ 깡총!');
   }
   dlgCallback = function() {
     showOpts(opts);
@@ -1308,7 +1308,7 @@ function endReading() {
   if (ch === 'bt') {
     say('bt', '오늘 밤의 별빛이 당신에게 좋은 길을 비춰주기를... 언제든 다시 찾아오세요.');
   } else {
-    say('rb', '또 보고 싶으면 언제든 와. 별빛은 항상 여기 있으니까.');
+    say('rb', '또 보고 싶으면 언제든 와~ 별빛은 항상 여기 있으니까, 깡총!');
   }
   dlgCallback = function() {
     hideDlg();
@@ -1614,9 +1614,10 @@ function selectChar(ch) {
 
   // Shift camera to center on selected character
   if (camera) {
-    var lookX = (ch === 'bt') ? -0.3 : 0.25;
-    camera.position.set(lookX, 2.2, 3.0);
-    camera.lookAt(lookX, 0.9, -0.2);
+    var cx = (ch === 'bt') ? BT_X : RB_X;
+    var cz = (ch === 'bt') ? BT_Z : RB_Z;
+    camera.position.set(cx, 2.2, cz + 3.5);
+    camera.lookAt(cx, 0.9, cz);
   }
 
   setTimeout(phaseGreeting, 400);
@@ -1629,9 +1630,9 @@ function phaseGreeting() {
     say('bt','저는 이곳의 안내인... 밤의 바텐더라고 불러주시면 됩니다.');
     say('bt','자... 오늘 이 늦은 밤에 찾아오신 건, 분명 이유가 있으시겠지요?');
   } else {
-    say('rb','어머, 손님이다. 어서 와, 기다리고 있었어.',{anim:'excited',pause:500});
-    say('rb','나는 루나. 이 별빛 아래서 카드를 읽는 걸 좋아하는 토끼야.');
-    say('rb','이 밤에 여기까지 찾아온 거면... 분명 마음에 품고 온 이야기가 있겠지?');
+    say('rb','어머, 손님이다~! 어서 와, 기다리고 있었어!',{anim:'excited',pause:500});
+    say('rb','나는 루나야~ 이 별빛 아래서 카드 읽는 걸 좋아하는 토끼, 깡총!');
+    say('rb','이 밤에 여기까지 찾아왔다면... 분명 마음에 품고 온 이야기가 있는 거지~?');
   }
   dlgCallback = function(){
     showOpts([
@@ -1646,7 +1647,7 @@ function respA(){
   if (selectedChar==='bt') {
     say('bt','고민이라... 이곳을 찾아오신 것만으로도 이미 첫 걸음을 떼신 겁니다.');
   } else {
-    say('rb','고민이 있구나. 괜찮아, 카드가 길을 비춰줄 거야. 같이 들여다보자.',{anim:'talking'});
+    say('rb','고민이 있구나~ 괜찮아, 카드가 길을 비춰줄 거야. 같이 들여다보자!',{anim:'talking'});
   }
   dlgCallback=phaseTopic;
 }
@@ -1654,7 +1655,7 @@ function respB(){
   if (selectedChar==='bt') {
     say('bt','후후, 재미라 하셨지만... 카드는 종종 진심을 읽어내곤 하죠.');
   } else {
-    say('rb','후후, 재미로 시작해도 괜찮아. 카드는 그런 마음도 잘 읽어내거든.',{anim:'talking'});
+    say('rb','후후~ 재미로 시작해도 괜찮아! 카드는 그런 마음도 잘 읽어내거든~',{anim:'talking'});
   }
   dlgCallback=phaseTopic;
 }
@@ -1663,14 +1664,14 @@ function respC(){
     say('bt','흥미로운 질문이시군요.',{anim:'thinking'});
     say('bt','타로는 미래를 \'예언\'하지 않습니다. 다만... 마음 속 이미 알고 있는 답을 비추어 보여줄 뿐이지요.');
   } else {
-    say('rb','좋은 질문이야. 타로는 미래를 정해주는 게 아니라, 네 안에 이미 있는 답을 비춰주는 거야. 해보면 느낄 수 있을 거야.');
+    say('rb','좋은 질문이야~ 타로는 미래를 정해주는 게 아니라, 네 안에 이미 있는 답을 비춰주는 거거든! 해보면 느낄 수 있을 거야~');
   }
   dlgCallback=phaseTopic;
 }
 
 function phaseTopic() {
   if (selectedChar==='bt') say('bt','그렇다면... 오늘은 어떤 이야기를 나눠볼까요?');
-  else say('rb','자, 어떤 이야기가 듣고 싶어? 마음이 가는 쪽을 골라봐.');
+  else say('rb','자~ 어떤 이야기가 듣고 싶어? 마음이 가는 쪽을 골라봐!');
   dlgCallback = function(){
     hideDlg();
     $topicSel.innerHTML='';
@@ -1695,7 +1696,7 @@ function onTopicPicked(t) {
   if (selectedChar==='bt') {
     say('bt', '...'+t.label+'이시군요. 좋습니다.');
   } else {
-    var rr={love:'연애운이구나... 후후, 별들이 뭐라고 하는지 들어보자.',career:'일과 성장에 대한 이야기구나. 카드가 좋은 방향을 보여줄 거야.',finance:'재물운... 알겠어. 이 흐름이 어디로 향하는지 같이 봐보자.',today:'오늘 하루의 흐름이 궁금한 거구나. 좋아, 읽어볼게.',general:'종합운이구나. 전체적인 기운의 흐름을 봐보자.'};
+    var rr={love:'연애운이구나~ 후후, 별들이 뭐라고 하는지 들어보자, 깡총!',career:'일과 성장에 대한 이야기구나~ 카드가 좋은 방향을 보여줄 거야!',finance:'재물운이구나~ 이 흐름이 어디로 향하는지 같이 봐보자!',today:'오늘 하루의 흐름이 궁금한 거구나~ 좋아, 읽어볼게!',general:'종합운이구나~ 전체적인 기운의 흐름을 같이 봐보자, 깡총!'};
     say('rb', rr[t.id]||'좋아, 읽어볼게.', {anim:'talking'});
   }
   dlgCallback=phaseSpread;
@@ -1703,7 +1704,7 @@ function onTopicPicked(t) {
 
 function phaseSpread() {
   if (selectedChar==='bt') say('bt','카드를 몇 장 뽑으시겠습니까?');
-  else say('rb','카드를 몇 장 뽑을까? 한 장이면 핵심 메시지 하나, 세 장이면 과거에서 미래까지 흐름을 읽을 수 있어.');
+  else say('rb','카드를 몇 장 뽑을까~? 한 장이면 핵심 메시지 하나, 세 장이면 과거에서 미래까지 흐름을 읽을 수 있어!');
   dlgCallback=function(){
     hideDlg();
     $spreadSel.innerHTML='';
@@ -1726,7 +1727,7 @@ function onSpreadPicked() {
     say('bt','좋습니다. 마음을 가라앉히시고...',{anim:'thinking',pause:300});
     say('bt','카드를 선택해 주세요. 끌리는 카드를 눌러 뒤집으시면 됩니다.');
   } else {
-    say('rb','자, 마음을 가라앉히고... 끌리는 카드를 눌러봐. 카드가 널 부르고 있을 거야.',{anim:'talking'});
+    say('rb','자~ 마음을 가라앉히고... 끌리는 카드를 눌러봐! 카드가 널 부르고 있을 거야, 깡총~',{anim:'talking'});
   }
   dlgCallback=function(){
     hideDlg();
