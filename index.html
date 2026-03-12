@@ -138,18 +138,16 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 /* ===== CARD SPOTLIGHT ===== */
 #cardSpotlight{position:fixed;top:50%;left:50%;transform:translate(-50%,-58%);z-index:58;opacity:0;pointer-events:none;transition:opacity .6s cubic-bezier(.4,0,.2,1)}
 #cardSpotlight.show{opacity:1}
-.spotlight-card{width:160px;height:260px;background:linear-gradient(180deg,#0d0520 0%,#1a0a3e 50%,#0d0520 100%);border:2px solid var(--gold);border-radius:12px;padding:1rem .8rem;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;box-shadow:0 0 40px rgba(201,168,76,.3),0 0 80px rgba(201,168,76,.1);animation:spotlightAppear .6s ease-out,spotlightGlow 2s ease-in-out .6s infinite;position:relative}
+/* 스포트라이트 카드 컨테이너 — 크기/레이아웃/장식만 정의.
+   내부 텍스트 스타일(.card-numeral 등)은 전역 클래스를 그대로 재사용한다. */
+.spotlight-card{width:160px;height:260px;background:linear-gradient(180deg,#0d0520 0%,#1a0a3e 50%,#0d0520 100%);border:2px solid var(--gold);border-radius:12px;padding:1rem .8rem;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;box-shadow:0 0 40px rgba(201,168,76,.3),0 0 80px rgba(201,168,76,.1);position:relative}
 .spotlight-card::before{content:'';position:absolute;inset:6px;border:1px solid rgba(201,168,76,.25);border-radius:8px;pointer-events:none}
-.spotlight-card.reversed{transform:rotate(180deg)}
-.spotlight-card .card-numeral{font-family:'Cinzel',serif;font-size:.65rem;color:var(--gold-lo);letter-spacing:.2em}
-.spotlight-card .card-name-en{font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold);letter-spacing:.1em;margin-top:.1rem}
-.spotlight-card .card-name-kr{font-family:'Noto Serif KR',serif;font-size:1.05rem;color:var(--text);font-weight:600;margin:.15rem 0}
-.spotlight-card .card-symbol{font-size:2rem;margin:.1rem 0;filter:drop-shadow(0 0 8px rgba(201,168,76,.4))}
-.spotlight-card .card-direction{font-size:.6rem;padding:.12rem .4rem;border-radius:20px;margin-top:.1rem}
-.spotlight-card .card-direction.upright{color:var(--gold);background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.2)}
-.spotlight-card .card-direction.reversed{color:var(--red-soft);background:rgba(207,102,85,.12);border:1px solid rgba(207,102,85,.2)}
-.spotlight-card .card-keywords{font-size:.5rem;color:var(--text-2);line-height:1.3;margin-top:.1rem}
+/* 등장 애니메이션 — .is-reversed 여부에 따라 rotate를 keyframe 안에 포함시켜
+   transform 덮어쓰기 충돌을 방지한다. JS에서 클래스 대신 데이터 속성으로 회전 적용. */
+.spotlight-card{animation:spotlightAppear .6s ease-out both,spotlightGlow 2s ease-in-out .6s infinite}
+.spotlight-card.reversed{animation:spotlightAppearRev .6s ease-out both,spotlightGlow 2s ease-in-out .6s infinite}
 @keyframes spotlightAppear{from{opacity:0;transform:scale(.7) translateY(30px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes spotlightAppearRev{from{opacity:0;transform:scale(.7) translateY(30px) rotate(180deg)}to{opacity:1;transform:scale(1) translateY(0) rotate(180deg)}}
 @keyframes spotlightGlow{0%,100%{box-shadow:0 0 30px rgba(201,168,76,.25),0 0 60px rgba(201,168,76,.1)}50%{box-shadow:0 0 50px rgba(201,168,76,.4),0 0 100px rgba(201,168,76,.15)}}
 .card-slot.card-locked{opacity:.45;pointer-events:none;filter:brightness(.6)}
 .card-slot.card-locked:hover{transform:none}
@@ -202,8 +200,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   #cardArea{gap:.7rem}
   #readingPanel{width:100vw}
   .spotlight-card{width:130px;height:210px;padding:.8rem .6rem}
-  .spotlight-card .card-symbol{font-size:1.6rem}
-  .spotlight-card .card-name-kr{font-size:.9rem}
   #cardSpotlight{transform:translate(-50%,-62%)}
 }
 @media(max-width:380px){
@@ -211,8 +207,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
   .card-name-kr{font-size:.75rem}
   .card-symbol{font-size:1.3rem}
   .spotlight-card{width:110px;height:180px;padding:.6rem .5rem}
-  .spotlight-card .card-symbol{font-size:1.3rem}
-  .spotlight-card .card-name-kr{font-size:.78rem}
   .sel-btn{min-width:85px;padding:.6rem .8rem}
   .sel-btn .sel-icon{font-size:1.2rem}
 }
@@ -423,6 +417,8 @@ var cardData = [];
 var selectedTopic = '', selectedSpread = 1;
 var drawnCards = [], flippedCount = 0;
 var storedReadings = null;
+// 카드 리딩 진행 중 플래그 — true인 동안 카드 클릭 차단하여 dlgCallback 경쟁 조건 방지
+var isReadingInProgress = false;
 
 /* ═══════ KOREAN PARTICLE HELPER ═══════ */
 function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
@@ -1078,8 +1074,12 @@ function drawCards(n) {
 }
 
 function topicKey() {
-  var m={love:'love',career:'career',finance:'finance',today:'love',general:'career'};
-  return m[selectedTopic]||'love';
+  // love/career/finance는 JSON situation_snippets 키와 1:1 대응.
+  // today/general은 전용 스니펫이 없으므로 세 키 중 랜덤 선택 — 의미 오류 방지.
+  var direct = {love:'love', career:'career', finance:'finance'};
+  if (direct[selectedTopic]) return direct[selectedTopic];
+  var fallbacks = ['love', 'career', 'finance'];
+  return fallbacks[Math.floor(Math.random() * fallbacks.length)];
 }
 
 /* ═══════ REACTION PATTERNS ═══════ */
@@ -1148,8 +1148,10 @@ function showCards() {
 
     slot.onclick = function() {
       if(slot.classList.contains('flipped') || slot.classList.contains('card-locked')) return;
+      if(isReadingInProgress) return;  // 리딩 진행 중 중복 클릭 차단
       slot.classList.add('flipped');
       flippedCount++;
+      isReadingInProgress = true;
       hideDlg();
       setTimeout(function(){ playReactionAndRead(card, idx); }, 900);
     };
@@ -1182,7 +1184,30 @@ function hideCardSpotlight() {
   if (spot) spot.classList.remove('show');
 }
 
-/* ═══════ PER-CARD REACTION + READING ═══════ */
+/* ═══════ NEXT-CARD PROMPT LINES ═══════ */
+var PROMPT_NEXT_BT = [
+  '...자, 다음 카드를 뒤집어 주세요.',
+  '...이어서, 다음 카드를 선택해 주세요.',
+  '...그럼, 다음 카드를 눌러주세요.'
+];
+var PROMPT_NEXT_RB = [
+  '자~ 다음 카드를 뒤집어봐!',
+  '다음 카드를 눌러봐~ 깡총!',
+  '다음 카드가 기다리고 있어!'
+];
+
+/* ═══════ PER-CARD REACTION + READING ═══════
+ *
+ * 설계 원칙:
+ *   playReactionAndRead()  — 반응 대사 큐잉 후 dlgCallback을 한 번만 설정.
+ *   deliverSpotlightReading() — 스포트라이트 표시 및 리딩 대사 큐잉 후 dlgCallback을 한 번만 설정.
+ *   afterSpotlightReading()   — 스포트라이트 정리 후 다음 단계로 진행.
+ *
+ * 이전의 중첩 dlgCallback 재할당 패턴을 제거하고 단계별 독립 함수로 분리하여
+ * 빠른 클릭이나 타이밍 경쟁 조건에서 콜백이 덮어써지는 문제를 방지한다.
+ * isReadingInProgress 플래그가 이 함수 진입 전에 true로 설정되고,
+ * afterSpotlightReading() 완료 시점에 false로 해제된다.
+ * ═══════ */
 function playReactionAndRead(card, idx) {
   var pool;
   if (selectedChar === 'bt') {
@@ -1193,54 +1218,50 @@ function playReactionAndRead(card, idx) {
   var rx = pool[Math.floor(Math.random()*pool.length)];
   rx.forEach(function(r){ say(r.c, r.t, {pause:r.pause||0}); });
 
-  // After reaction dialogue, show spotlight and deliver this card's reading
-  dlgCallback = function() {
-    // Hide card area, show spotlight
-    $cardArea.classList.remove('show');
-    showCardSpotlight(card);
+  dlgCallback = function() { deliverSpotlightReading(card, idx); };
+}
 
-    // Deliver this card's reading lines
-    var cardReading = storedReadings.cards[idx];
-    var ch = selectedChar;
-    cardReading.lines.forEach(function(line) {
-      say(ch, line);
-    });
+function deliverSpotlightReading(card, idx) {
+  // null 방어 — 카드 데이터 로드 실패 시 안전하게 종료
+  var cardReading = storedReadings && storedReadings.cards[idx];
+  if (!cardReading) {
+    console.error('[READING] storedReadings.cards['+idx+'] 없음 — 리딩 스킵');
+    isReadingInProgress = false;
+    return;
+  }
 
-    // After reading, hide spotlight and proceed
-    dlgCallback = function() {
-      hideCardSpotlight();
+  $cardArea.classList.remove('show');
+  showCardSpotlight(card);
 
-      if (flippedCount < drawnCards.length) {
-        // More cards to flip — show card area and unlock next card
-        $cardArea.classList.add('show');
-        var slots = $cardArea.querySelectorAll('.card-slot');
-        if (slots[flippedCount]) slots[flippedCount].classList.remove('card-locked');
+  var ch = selectedChar;
+  cardReading.lines.forEach(function(line) { say(ch, line); });
 
-        // Prompt to flip next card
-        if (ch === 'bt') {
-          say('bt', pick([
-            '...자, 다음 카드를 뒤집어 주세요.',
-            '...이어서, 다음 카드를 선택해 주세요.',
-            '...그럼, 다음 카드를 눌러주세요.'
-          ]));
-        } else {
-          say('rb', pick([
-            '자~ 다음 카드를 뒤집어봐!',
-            '다음 카드를 눌러봐~ 깡총!',
-            '다음 카드가 기다리고 있어!'
-          ]));
-        }
-        dlgCallback = function() { hideDlg(); };
-      } else {
-        // All cards read — proceed to synopsis or final
-        if (storedReadings.synopsis) {
-          deliverSynopsis();
-        } else {
-          deliverFinalMessage();
-        }
-      }
-    };
-  };
+  dlgCallback = function() { afterSpotlightReading(idx, ch); };
+}
+
+function afterSpotlightReading(idx, ch) {
+  hideCardSpotlight();
+
+  if (flippedCount < drawnCards.length) {
+    // 아직 뒤집지 않은 카드가 남아 있음 — 카드 영역 복원 후 다음 카드 잠금 해제
+    $cardArea.classList.add('show');
+    var slots = $cardArea.querySelectorAll('.card-slot');
+    // flippedCount는 이미 이 카드를 센 이후 값이므로 slots[flippedCount]가 다음 카드
+    if (slots[flippedCount]) slots[flippedCount].classList.remove('card-locked');
+
+    isReadingInProgress = false;  // 다음 카드 클릭 허용
+
+    say(ch, pick(ch === 'bt' ? PROMPT_NEXT_BT : PROMPT_NEXT_RB));
+    dlgCallback = function() { hideDlg(); };
+  } else {
+    // 모든 카드 리딩 완료 — 종합 or 마무리로 이동
+    isReadingInProgress = false;
+    if (storedReadings.synopsis) {
+      deliverSynopsis();
+    } else {
+      deliverFinalMessage();
+    }
+  }
 }
 
 function toRoman(n){
@@ -1782,7 +1803,7 @@ function resetGame() {
   hideCardSpotlight();
   hideDlg();
   drawnCards=[]; flippedCount=0; selectedTopic=''; selectedSpread=1;
-  btAnimState='idle'; rbAnimState='idle'; storedReadings=null;
+  btAnimState='idle'; rbAnimState='idle'; storedReadings=null; isReadingInProgress=false;
   // Show character select again
   document.getElementById('charSelect').classList.add('show');
 }
