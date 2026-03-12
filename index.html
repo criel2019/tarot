@@ -105,7 +105,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .sel-btn .sel-desc{font-size:.7rem;color:var(--text-2);margin-top:.2rem}
 
 /* ===== CARD AREA ===== */
-#cardArea{position:fixed;top:50%;left:50%;transform:translate(-50%,-55%);z-index:55;display:flex;flex-wrap:wrap;justify-content:center;gap:1.2rem;opacity:0;transition:all .6s;pointer-events:none;max-width:90vw}
+#cardArea{position:fixed;top:50%;left:50%;transform:translate(-50%,-55%);z-index:55;display:flex;justify-content:center;gap:1.2rem;opacity:0;transition:all .6s;pointer-events:none}
 #cardArea.show{opacity:1;pointer-events:auto}
 .card-slot{width:130px;height:210px;perspective:1000px;cursor:pointer;transition:transform .3s;position:relative}
 .card-slot:hover:not(.flipped){transform:translateY(-8px)}
@@ -153,11 +153,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text
 .card-slot.card-locked:hover{transform:none}
 
 /* ===== CANDIDATE SELECTION ===== */
-.card-slot.candidate-selected{transform:translateY(-18px);filter:brightness(1.1)}
+#cardArea.candidate-grid{display:grid;grid-template-columns:repeat(6,1fr);justify-items:center;align-items:start;gap:.8rem;max-width:min(480px,88vw)}
+#cardArea.candidate-grid .card-slot{grid-column:span 2;width:min(26vw,120px);height:min(42vw,195px)}
+#cardArea.candidate-grid .card-slot:nth-child(4){grid-column:2/span 2}
+.card-slot.candidate-selected{transform:translateY(-14px);filter:brightness(1.1)}
 .card-slot.candidate-selected .card-back{border-color:var(--gold);box-shadow:0 0 24px rgba(201,168,76,.45),0 4px 20px rgba(0,0,0,.4)}
 .card-slot.candidate-selected .card-back::after{opacity:1;text-shadow:0 0 30px rgba(201,168,76,.8)}
 .card-slot.candidate-rejected{opacity:0;transform:scale(.7) translateY(30px);transition:all .6s cubic-bezier(.4,0,.2,1);pointer-events:none}
-.candidate-order{position:absolute;top:-14px;right:-10px;width:26px;height:26px;border-radius:50%;background:var(--gold);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.8rem;font-weight:700;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.4);animation:badgePop .3s cubic-bezier(.3,1.5,.7,1) both}
+.candidate-order{position:absolute;top:-10px;right:-8px;width:22px;height:22px;border-radius:50%;background:var(--gold);color:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-size:.7rem;font-weight:700;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.4);animation:badgePop .3s cubic-bezier(.3,1.5,.7,1) both}
 @keyframes badgePop{from{transform:scale(0)}to{transform:scale(1)}}
 
 /* ===== READING PANEL ===== */
@@ -1096,6 +1099,7 @@ function drawCandidates() {
 
 function showCandidateCards() {
   $cardArea.innerHTML='';
+  $cardArea.classList.add('candidate-grid');
   candidateCards.forEach(function(card, idx) {
     var slot=document.createElement('div');
     slot.className='card-slot entering';
@@ -1240,6 +1244,7 @@ var RX_RB_REV = [
 /* ═══════ CARD UI ═══════ */
 function showCards() {
   $cardArea.innerHTML='';
+  $cardArea.classList.remove('candidate-grid');
   var labels = selectedSpread===3 ? ['과거','현재','미래'] : [''];
 
   drawnCards.forEach(function(card, idx) {
@@ -2134,7 +2139,7 @@ function onSpreadPicked() {
 function resetGame() {
   document.getElementById('readingPanel').classList.remove('show');
   document.getElementById('restartBtn').classList.remove('show');
-  $cardArea.classList.remove('show');
+  $cardArea.classList.remove('show','candidate-grid');
   $cardArea.innerHTML='';
   hideCardSpotlight();
   hideDlg();
